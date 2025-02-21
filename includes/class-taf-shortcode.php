@@ -143,17 +143,26 @@ class TAF_Shortcode {
         
         if (empty($make) || empty($model) || empty($year)) {
             wp_send_json_error(array(
-                'message' => 'Hiányzó paraméterek.',
+                'message' => 'Kérlek válassz ki minden mezőt!',
                 'code' => 'missing_params'
             ));
             return;
         }
 
+        error_log('TAF Search Params - Make: ' . $make . ', Model: ' . $model . ', Year: ' . $year);
+        
         $wheels = $this->api->get_wheel_specs($make, $model, $year);
         
-        if ($wheels !== false) {
-            error_log('TAF Wheels Response: ' . print_r($wheels, true));
-            wp_send_json_success($wheels);
+        if (is_array($wheels)) {
+            if (empty($wheels)) {
+                wp_send_json_error(array(
+                    'message' => 'Nem található felni a megadott paraméterekkel.',
+                    'code' => 'no_results'
+                ));
+            } else {
+                error_log('TAF Wheels Found: ' . count($wheels));
+                wp_send_json_success($wheels);
+            }
         } else {
             error_log('TAF Wheels Error: Nem sikerült betölteni a felni adatokat');
             wp_send_json_error(array(

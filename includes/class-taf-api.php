@@ -151,14 +151,69 @@ class TAF_API {
      * Felni adatok lekérése
      */
     public function get_wheel_specs($make, $model, $year) {
-        $response = $this->make_request('/search/by_model/', array(
+        // Először lekérjük a trim/generation adatokat
+        $trim_response = $this->make_request('/search/by_model/', array(
             'make' => $make,
             'model' => $model,
             'year' => $year
         ));
-        if ($response && isset($response['data'])) {
-            return $response['data'];
+
+        error_log('TAF Trim Response: ' . print_r($trim_response, true));
+
+        if (!$trim_response || !isset($trim_response['data']) || empty($trim_response['data'])) {
+            // Ha nincs trim adat, próbáljuk meg közvetlenül a wheels végpontot
+            $response = $this->make_request('/wheels/', array(
+                'make' => $make,
+                'model' => $model,
+                'year' => $year
+            ));
+
+            error_log('TAF Wheels Direct Response: ' . print_r($response, true));
+
+            if ($response && isset($response['data'])) {
+                $wheels = array();
+                foreach ($response['data'] as $wheel) {
+                    $wheels[] = array(
+                        'make' => $make,
+                        'model' => $model,
+                        'size' => isset($wheel['rim_diameter']) ? $wheel['rim_diameter'] : '',
+                        'width' => isset($wheel['rim_width']) ? $wheel['rim_width'] : '',
+                        'offset' => isset($wheel['offset']) ? $wheel['offset'] : '',
+                        'bolt_pattern' => isset($wheel['pcd']) ? $wheel['pcd'] : ''
+                    );
+                }
+                return $wheels;
+            }
+        } else {
+            // Ha van trim adat, használjuk az első trim ID-t
+            $trim = reset($trim_response['data']);
+            if (isset($trim['trim'])) {
+                $wheels_response = $this->make_request('/wheels/', array(
+                    'make' => $make,
+                    'model' => $model,
+                    'year' => $year,
+                    'trim' => $trim['trim']
+                ));
+
+                error_log('TAF Wheels Response with Trim: ' . print_r($wheels_response, true));
+
+                if ($wheels_response && isset($wheels_response['data'])) {
+                    $wheels = array();
+                    foreach ($wheels_response['data'] as $wheel) {
+                        $wheels[] = array(
+                            'make' => $make,
+                            'model' => $model,
+                            'size' => isset($wheel['rim_diameter']) ? $wheel['rim_diameter'] : '',
+                            'width' => isset($wheel['rim_width']) ? $wheel['rim_width'] : '',
+                            'offset' => isset($wheel['offset']) ? $wheel['offset'] : '',
+                            'bolt_pattern' => isset($wheel['pcd']) ? $wheel['pcd'] : ''
+                        );
+                    }
+                    return $wheels;
+                }
+            }
         }
-        return false;
+
+        return array();
     }
 } 
