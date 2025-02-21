@@ -179,7 +179,6 @@ class TAF_Shortcode {
 
         // Ha hiba történt vagy nincs adat
         if (isset($response['error']) || empty($response['wheel_sets'])) {
-            error_log('TAF Debug - Nincs találat vagy hiba: ' . print_r($response, true));
             wp_send_json_error(array(
                 'message' => 'Nem található felni a megadott paraméterekkel.',
                 'code' => 'no_results'
@@ -187,13 +186,20 @@ class TAF_Shortcode {
             return;
         }
 
-        // Csak a méreteket gyűjtjük ki
+        // Gyűjtsük ki az összes lehetséges méretet és osztókört
         $needed_sizes = array();
+        $bolt_patterns = array();
         foreach ($response['wheel_sets'] as $set) {
             if (isset($set['front'])) {
+                // Méret kinyerése
                 $size = preg_replace('/[^0-9]/', '', $set['front']['diameter']);
                 if (!empty($size)) {
                     $needed_sizes[] = $size;
+                }
+                // Osztókör kinyerése
+                if (!empty($set['front']['bolt_pattern'])) {
+                    $bolt_pattern = str_replace('x', '-', $set['front']['bolt_pattern']);
+                    $bolt_patterns[] = $bolt_pattern;
                 }
             }
             if (isset($set['rear'])) {
@@ -201,32 +207,36 @@ class TAF_Shortcode {
                 if (!empty($size)) {
                     $needed_sizes[] = $size;
                 }
+                if (!empty($set['rear']['bolt_pattern'])) {
+                    $bolt_pattern = str_replace('x', '-', $set['rear']['bolt_pattern']);
+                    $bolt_patterns[] = $bolt_pattern;
+                }
             }
         }
         $needed_sizes = array_unique($needed_sizes);
+        $bolt_patterns = array_unique($bolt_patterns);
         sort($needed_sizes);
+        sort($bolt_patterns);
 
         error_log('TAF Debug - Szükséges méretek: ' . print_r($needed_sizes, true));
+        error_log('TAF Debug - Szükséges osztókörök: ' . print_r($bolt_patterns, true));
 
-        // Ha nincs méret, nincs mit keresni
-        if (empty($needed_sizes)) {
-            error_log('TAF Debug - Nem található méret');
-            wp_send_json_error(array(
-                'message' => 'Nem található felni méret a megadott paraméterekkel.',
-                'code' => 'no_sizes'
-            ));
-            return;
-        }
-
-        // Lekérjük az összes elérhető méretet
-        $available_terms = get_terms(array(
+        // Lekérjük az összes elérhető méretet és osztókört
+        $available_terms_size = get_terms(array(
             'taxonomy' => 'pa_atmero',
             'hide_empty' => true
         ));
 
+        $available_terms_bolt = get_terms(array(
+            'taxonomy' => 'pa_osztokor',
+            'hide_empty' => true
+        ));
+
         $available_sizes = array();
-        if (!is_wp_error($available_terms)) {
-            foreach ($available_terms as $term) {
+        $available_bolt_patterns = array();
+
+        if (!is_wp_error($available_terms_size)) {
+            foreach ($available_terms_size as $term) {
                 $size = preg_replace('/[^0-9]/', '', $term->name);
                 if (!empty($size)) {
                     $available_sizes[] = $size;
@@ -234,9 +244,18 @@ class TAF_Shortcode {
             }
             sort($available_sizes);
         }
-        error_log('TAF Debug - Elérhető méretek: ' . print_r($available_sizes, true));
 
-        // Lekérjük a termékeket a megfelelő méretekkel
+        if (!is_wp_error($available_terms_bolt)) {
+            foreach ($available_terms_bolt as $term) {
+                $available_bolt_patterns[] = $term->name;
+            }
+            sort($available_bolt_patterns);
+        }
+
+        error_log('TAF Debug - Elérhető méretek: ' . print_r($available_sizes, true));
+        error_log('TAF Debug - Elérhető osztókörök: ' . print_r($available_bolt_patterns, true));
+
+        // Lekérjük a termékeket a megfelelő méretekkel és osztókörökkel
         $args = array(
             'post_type' => 'product',
             'post_status' => 'publish',
@@ -244,6 +263,7 @@ class TAF_Shortcode {
             'orderby' => 'title',
             'order' => 'ASC',
             'tax_query' => array(
+                'relation' => 'AND',
                 array(
                     'taxonomy' => 'pa_atmero',
                     'field' => 'name',
@@ -252,6 +272,16 @@ class TAF_Shortcode {
                 )
             )
         );
+
+        // Ha van osztókör, azt is hozzáadjuk a szűréshez
+        if (!empty($bolt_patterns)) {
+            $args['tax_query'][] = array(
+                'taxonomy' => 'pa_osztokor',
+                'field' => 'name',
+                'terms' => $bolt_patterns,
+                'operator' => 'IN'
+            );
+        }
 
         error_log('TAF Debug - WP_Query argumentumok: ' . print_r($args, true));
 
@@ -270,9 +300,15 @@ class TAF_Shortcode {
             foreach ($products as $product) {
                 if ($product->is_in_stock()) {
                     $product_size = preg_replace('/[^0-9]/', '', $product->get_attribute('pa_atmero'));
-                    error_log('TAF Debug - Termék ellenőrzése - ID: ' . $product->get_id() . ', Méret: ' . $product_size);
+                    $product_bolt = $product->get_attribute('pa_osztokor');
                     
-                    if (in_array($product_size, $needed_sizes)) {
+                    error_log('TAF Debug - Termék ellenőrzése - ID: ' . $product->get_id() . ', Méret: ' . $product_size . ', Osztókör: ' . $product_bolt);
+                    
+                    // Ellenőrizzük mind a méretet, mind az osztókört
+                    $size_match = in_array($product_size, $needed_sizes);
+                    $bolt_match = empty($bolt_patterns) || in_array($product_bolt, $bolt_patterns);
+                    
+                    if ($size_match && $bolt_match) {
                         error_log('TAF Debug - Megfelelő termék találat - ID: ' . $product->get_id());
                         $regular_price = $product->get_regular_price();
                         $sale_price = $product->get_sale_price();
@@ -287,14 +323,16 @@ class TAF_Shortcode {
                             'permalink' => $product->get_permalink(),
                             'image_url' => wp_get_attachment_image_url($product->get_image_id(), 'medium'),
                             'size' => $product_size,
-                            'bolt_pattern' => $product->get_attribute('pa_osztokor')
+                            'bolt_pattern' => $product_bolt
                         );
 
                         if (count($matching_wheels) >= 10) {
                             break;
                         }
                     } else {
-                        error_log('TAF Debug - Nem megfelelő méret - Termék ID: ' . $product->get_id() . ', Méret: ' . $product_size);
+                        error_log('TAF Debug - Nem megfelelő termék - ID: ' . $product->get_id() . 
+                                 ' (Méret egyezés: ' . ($size_match ? 'igen' : 'nem') . 
+                                 ', Osztókör egyezés: ' . ($bolt_match ? 'igen' : 'nem') . ')');
                     }
                 } else {
                     error_log('TAF Debug - Nincs készleten - Termék ID: ' . $product->get_id());
@@ -311,15 +349,30 @@ class TAF_Shortcode {
             $error_message .= 'API által visszaadott méretek: ' . implode(', ', array_map(function($size) { 
                 return $size . '"'; 
             }, $needed_sizes)) . '<br>';
+            
+            if (!empty($bolt_patterns)) {
+                $error_message .= 'API által visszaadott osztókörök: ' . implode(', ', $bolt_patterns) . '<br>';
+            }
+            
             $error_message .= 'Elérhető méretek: ' . implode(', ', array_map(function($size) {
                 return $size . '"';
             }, $available_sizes));
+
+            if (!empty($available_bolt_patterns)) {
+                $error_message .= '<br>Elérhető osztókörök: ' . implode(', ', $available_bolt_patterns);
+            }
 
             error_log('TAF Debug - Hibaüzenet: ' . $error_message);
 
             wp_send_json_error(array(
                 'message' => $error_message,
-                'code' => 'no_matching_wheels'
+                'code' => 'no_matching_wheels',
+                'debug' => array(
+                    'api_sizes' => implode(', ', array_map(function($size) { return $size . '"'; }, $needed_sizes)),
+                    'api_bolt_patterns' => !empty($bolt_patterns) ? implode(', ', $bolt_patterns) : '',
+                    'available_sizes' => implode(', ', array_map(function($size) { return $size . '"'; }, $available_sizes)),
+                    'available_bolt_patterns' => !empty($available_bolt_patterns) ? implode(', ', $available_bolt_patterns) : ''
+                )
             ));
         }
     }
