@@ -15,6 +15,7 @@ jQuery(document).ready(function($) {
     function loadMakes() {
         $loading.show();
         $error.hide();
+        $makeSelect.prop('disabled', true);
 
         $.ajax({
             url: tafAjax.ajaxurl,
@@ -24,14 +25,19 @@ jQuery(document).ready(function($) {
                 nonce: tafAjax.nonce
             },
             success: function(response) {
-                if (response.success) {
+                console.log('Makes response:', response);
+                if (response.success && Array.isArray(response.data)) {
                     makes = response.data;
                     populateMakeSelect();
                 } else {
-                    showError('Hiba történt a gyártók betöltése közben.');
+                    const message = response.data && response.data.message 
+                        ? response.data.message 
+                        : 'Hiba történt a gyártók betöltése közben.';
+                    showError(message);
                 }
             },
-            error: function() {
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error('Makes error:', textStatus, errorThrown);
                 showError('Hiba történt a szerverrel való kommunikáció során.');
             },
             complete: function() {
@@ -56,14 +62,19 @@ jQuery(document).ready(function($) {
                 nonce: tafAjax.nonce
             },
             success: function(response) {
-                if (response.success) {
+                console.log('Models response:', response);
+                if (response.success && Array.isArray(response.data)) {
                     models = response.data;
                     populateModelSelect();
                 } else {
-                    showError('Hiba történt a modellek betöltése közben.');
+                    const message = response.data && response.data.message 
+                        ? response.data.message 
+                        : 'Hiba történt a modellek betöltése közben.';
+                    showError(message);
                 }
             },
-            error: function() {
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error('Models error:', textStatus, errorThrown);
                 showError('Hiba történt a szerverrel való kommunikáció során.');
             },
             complete: function() {
@@ -88,14 +99,19 @@ jQuery(document).ready(function($) {
                 nonce: tafAjax.nonce
             },
             success: function(response) {
-                if (response.success) {
+                console.log('Years response:', response);
+                if (response.success && Array.isArray(response.data)) {
                     years = response.data;
                     populateYearSelect();
                 } else {
-                    showError('Hiba történt az évek betöltése közben.');
+                    const message = response.data && response.data.message 
+                        ? response.data.message 
+                        : 'Hiba történt az évek betöltése közben.';
+                    showError(message);
                 }
             },
-            error: function() {
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error('Years error:', textStatus, errorThrown);
                 showError('Hiba történt a szerverrel való kommunikáció során.');
             },
             complete: function() {
@@ -107,30 +123,43 @@ jQuery(document).ready(function($) {
     // Select mezők feltöltése
     function populateMakeSelect() {
         $makeSelect.empty().append('<option value="">Válassz gyártót...</option>');
-        makes.forEach(function(make) {
-            $makeSelect.append(`<option value="${make.slug}">${make.name}</option>`);
-        });
-        $makeSelect.prop('disabled', false);
+        if (Array.isArray(makes)) {
+            makes.forEach(function(make) {
+                $makeSelect.append(`<option value="${make.slug}">${make.name}</option>`);
+            });
+            $makeSelect.prop('disabled', false);
+        } else {
+            showError('Hibás formátumú gyártó adatok.');
+        }
     }
 
     function populateModelSelect() {
         $modelSelect.empty().append('<option value="">Válassz modellt...</option>');
-        models.forEach(function(model) {
-            $modelSelect.append(`<option value="${model.slug}">${model.name}</option>`);
-        });
-        $modelSelect.prop('disabled', false);
+        if (Array.isArray(models)) {
+            models.forEach(function(model) {
+                $modelSelect.append(`<option value="${model.slug}">${model.name}</option>`);
+            });
+            $modelSelect.prop('disabled', false);
+        } else {
+            showError('Hibás formátumú modell adatok.');
+        }
     }
 
     function populateYearSelect() {
         $yearSelect.empty().append('<option value="">Válassz évet...</option>');
-        years.forEach(function(year) {
-            $yearSelect.append(`<option value="${year}">${year}</option>`);
-        });
-        $yearSelect.prop('disabled', false);
+        if (Array.isArray(years)) {
+            years.forEach(function(year) {
+                $yearSelect.append(`<option value="${year}">${year}</option>`);
+            });
+            $yearSelect.prop('disabled', false);
+        } else {
+            showError('Hibás formátumú év adatok.');
+        }
     }
 
     // Hibaüzenet megjelenítése
     function showError(message) {
+        console.error('TAF Error:', message);
         $error.text(message).show();
     }
 
@@ -186,13 +215,18 @@ jQuery(document).ready(function($) {
                 nonce: tafAjax.nonce
             },
             success: function(response) {
-                if (response.success) {
+                console.log('Wheels response:', response);
+                if (response.success && Array.isArray(response.data)) {
                     displayResults(response.data);
                 } else {
-                    showError('Hiba történt a keresés során.');
+                    const message = response.data && response.data.message 
+                        ? response.data.message 
+                        : 'Hiba történt a keresés során.';
+                    showError(message);
                 }
             },
-            error: function() {
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error('Wheels error:', textStatus, errorThrown);
                 showError('Hiba történt a szerverrel való kommunikáció során.');
             },
             complete: function() {

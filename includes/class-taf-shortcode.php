@@ -67,10 +67,15 @@ class TAF_Shortcode {
         
         $makes = $this->api->get_makes();
         
-        if ($makes) {
+        if ($makes !== false) {
+            error_log('TAF Makes Response: ' . print_r($makes, true));
             wp_send_json_success($makes);
         } else {
-            wp_send_json_error('Nem sikerült betölteni a gyártókat.');
+            error_log('TAF Makes Error: Nem sikerült betölteni a gyártókat');
+            wp_send_json_error(array(
+                'message' => 'Nem sikerült betölteni a gyártókat.',
+                'code' => 'makes_error'
+            ));
         }
     }
 
@@ -80,16 +85,24 @@ class TAF_Shortcode {
         $make = sanitize_text_field($_POST['make']);
         
         if (empty($make)) {
-            wp_send_json_error('Hiányzó gyártó paraméter.');
+            wp_send_json_error(array(
+                'message' => 'Hiányzó gyártó paraméter.',
+                'code' => 'missing_make'
+            ));
             return;
         }
 
         $models = $this->api->get_models($make);
         
-        if ($models) {
+        if ($models !== false) {
+            error_log('TAF Models Response: ' . print_r($models, true));
             wp_send_json_success($models);
         } else {
-            wp_send_json_error('Nem sikerült betölteni a modelleket.');
+            error_log('TAF Models Error: Nem sikerült betölteni a modelleket');
+            wp_send_json_error(array(
+                'message' => 'Nem sikerült betölteni a modelleket.',
+                'code' => 'models_error'
+            ));
         }
     }
 
@@ -100,16 +113,24 @@ class TAF_Shortcode {
         $model = sanitize_text_field($_POST['model']);
         
         if (empty($make) || empty($model)) {
-            wp_send_json_error('Hiányzó paraméterek.');
+            wp_send_json_error(array(
+                'message' => 'Hiányzó paraméterek.',
+                'code' => 'missing_params'
+            ));
             return;
         }
 
         $years = $this->api->get_years($make, $model);
         
-        if ($years) {
+        if ($years !== false) {
+            error_log('TAF Years Response: ' . print_r($years, true));
             wp_send_json_success($years);
         } else {
-            wp_send_json_error('Nem sikerült betölteni az éveket.');
+            error_log('TAF Years Error: Nem sikerült betölteni az éveket');
+            wp_send_json_error(array(
+                'message' => 'Nem sikerült betölteni az éveket.',
+                'code' => 'years_error'
+            ));
         }
     }
 
@@ -121,16 +142,24 @@ class TAF_Shortcode {
         $year = intval($_POST['year']);
         
         if (empty($make) || empty($model) || empty($year)) {
-            wp_send_json_error('Hiányzó paraméterek.');
+            wp_send_json_error(array(
+                'message' => 'Hiányzó paraméterek.',
+                'code' => 'missing_params'
+            ));
             return;
         }
 
         $wheels = $this->api->get_wheel_specs($make, $model, $year);
         
-        if ($wheels) {
+        if ($wheels !== false) {
+            error_log('TAF Wheels Response: ' . print_r($wheels, true));
             wp_send_json_success($wheels);
         } else {
-            wp_send_json_error('Nem sikerült betölteni a felni adatokat.');
+            error_log('TAF Wheels Error: Nem sikerült betölteni a felni adatokat');
+            wp_send_json_error(array(
+                'message' => 'Nem sikerült betölteni a felni adatokat.',
+                'code' => 'wheels_error'
+            ));
         }
     }
 } 
