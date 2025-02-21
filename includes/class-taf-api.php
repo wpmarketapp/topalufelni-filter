@@ -156,31 +156,44 @@ class TAF_API {
             return null;
         }
 
+        // Debug log
+        error_log('TAF Wheel Data for Product Search: ' . print_r($wheel_data, true));
+
         $args = array(
             'post_type' => 'product',
             'post_status' => 'publish',
             'posts_per_page' => -1,
             'tax_query' => array(
-                'relation' => 'AND',
-                array(
-                    'taxonomy' => 'pa_atmero',
-                    'field' => 'name',
-                    'terms' => $wheel_data['size']
-                )
+                'relation' => 'AND'
             )
         );
 
-        // Ha van bolt_pattern, azt is nézzük
-        if (!empty($wheel_data['bolt_pattern'])) {
+        // Átmérő szűrése
+        if (!empty($wheel_data['size'])) {
             $args['tax_query'][] = array(
-                'taxonomy' => 'pa_osztokor',
-                'field' => 'name',
-                'terms' => str_replace('x', '', $wheel_data['bolt_pattern'])
+                'taxonomy' => 'pa_atmero',
+                'field' => 'slug',
+                'terms' => sanitize_title($wheel_data['size'])
             );
+            error_log('TAF Searching for diameter: ' . $wheel_data['size']);
         }
 
+        // Osztókör szűrése
+        if (!empty($wheel_data['bolt_pattern'])) {
+            // Formázás: pl. "5x112" -> "5-112"
+            $bolt_pattern = str_replace('x', '-', $wheel_data['bolt_pattern']);
+            $args['tax_query'][] = array(
+                'taxonomy' => 'pa_osztokor',
+                'field' => 'slug',
+                'terms' => sanitize_title($bolt_pattern)
+            );
+            error_log('TAF Searching for bolt pattern: ' . $bolt_pattern);
+        }
+
+        // Termékek lekérése
         $products = wc_get_products($args);
-        
+        error_log('TAF Found products: ' . count($products));
+
         if (!empty($products)) {
             $matching_products = array();
             foreach ($products as $product) {
@@ -197,6 +210,7 @@ class TAF_API {
                     );
                 }
             }
+            error_log('TAF Matching products: ' . count($matching_products));
             return $matching_products;
         }
 
