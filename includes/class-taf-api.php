@@ -151,77 +151,62 @@ class TAF_API {
      * Felni adatok lekérése
      */
     public function get_wheel_specs($make, $model, $year) {
-        // Először próbáljuk meg a modifications végpontot
-        $mod_response = $this->make_request('/modifications/', array(
+        // Konkrét modifikáció lekérése az adott évhez
+        $response = $this->make_request('/search/by_model/', array(
             'make' => $make,
             'model' => $model,
             'year' => $year
         ));
 
-        error_log('TAF Modifications Response: ' . print_r($mod_response, true));
+        error_log('TAF Search Response: ' . print_r($response, true));
 
-        if ($mod_response && isset($mod_response['data']) && !empty($mod_response['data'])) {
-            // Használjuk az első módosítást
-            $modification = reset($mod_response['data']);
-            
-            // Keressük a felni adatokat a módosítással
-            $wheels_response = $this->make_request('/search/by_model/', array(
-                'make' => $make,
-                'model' => $model,
-                'year' => $year,
-                'modification' => $modification['slug']
-            ));
+        if ($response && isset($response['data']) && !empty($response['data'])) {
+            $vehicle_data = reset($response['data']);
+            $wheels = array();
 
-            error_log('TAF Wheels Response with Modification: ' . print_r($wheels_response, true));
+            // Technikai adatok kinyerése
+            $bolt_pattern = '';
+            if (isset($vehicle_data['technical']) && isset($vehicle_data['technical']['bolt_pattern'])) {
+                $bolt_pattern = $vehicle_data['technical']['bolt_pattern'];
+            }
 
-            if ($wheels_response && isset($wheels_response['data']) && !empty($wheels_response['data'])) {
-                $vehicle_data = reset($wheels_response['data']);
-                $wheels = array();
+            // Kerekek feldolgozása
+            if (isset($vehicle_data['wheels']) && is_array($vehicle_data['wheels'])) {
+                foreach ($vehicle_data['wheels'] as $wheel_set) {
+                    if (isset($wheel_set['front'])) {
+                        $front = $wheel_set['front'];
+                        $rim_info = $this->parse_rim_info($front['rim']);
+                        $wheels[] = array(
+                            'make' => $make,
+                            'model' => $model,
+                            'position' => 'Első',
+                            'size' => $rim_info['diameter'],
+                            'width' => $rim_info['width'],
+                            'offset' => $rim_info['offset'],
+                            'bolt_pattern' => $bolt_pattern,
+                            'tire_size' => $front['tire']
+                        );
+                    }
 
-                // Technikai adatok kinyerése
-                $bolt_pattern = '';
-                if (isset($vehicle_data['technical']) && isset($vehicle_data['technical']['bolt_pattern'])) {
-                    $bolt_pattern = $vehicle_data['technical']['bolt_pattern'];
-                }
-
-                // Kerekek feldolgozása
-                if (isset($vehicle_data['wheels']) && is_array($vehicle_data['wheels'])) {
-                    foreach ($vehicle_data['wheels'] as $wheel_set) {
-                        if (isset($wheel_set['front'])) {
-                            $front = $wheel_set['front'];
-                            $rim_info = $this->parse_rim_info($front['rim']);
-                            $wheels[] = array(
-                                'make' => $make,
-                                'model' => $model,
-                                'position' => 'Első',
-                                'size' => $rim_info['diameter'],
-                                'width' => $rim_info['width'],
-                                'offset' => $rim_info['offset'],
-                                'bolt_pattern' => $bolt_pattern,
-                                'tire_size' => $front['tire']
-                            );
-                        }
-
-                        if (isset($wheel_set['rear'])) {
-                            $rear = $wheel_set['rear'];
-                            $rim_info = $this->parse_rim_info($rear['rim']);
-                            $wheels[] = array(
-                                'make' => $make,
-                                'model' => $model,
-                                'position' => 'Hátsó',
-                                'size' => $rim_info['diameter'],
-                                'width' => $rim_info['width'],
-                                'offset' => $rim_info['offset'],
-                                'bolt_pattern' => $bolt_pattern,
-                                'tire_size' => $rear['tire']
-                            );
-                        }
+                    if (isset($wheel_set['rear'])) {
+                        $rear = $wheel_set['rear'];
+                        $rim_info = $this->parse_rim_info($rear['rim']);
+                        $wheels[] = array(
+                            'make' => $make,
+                            'model' => $model,
+                            'position' => 'Hátsó',
+                            'size' => $rim_info['diameter'],
+                            'width' => $rim_info['width'],
+                            'offset' => $rim_info['offset'],
+                            'bolt_pattern' => $bolt_pattern,
+                            'tire_size' => $rear['tire']
+                        );
                     }
                 }
-
-                error_log('TAF Processed Wheels: ' . print_r($wheels, true));
-                return $wheels;
             }
+
+            error_log('TAF Processed Wheels: ' . print_r($wheels, true));
+            return $wheels;
         }
 
         return array();
