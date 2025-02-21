@@ -247,19 +247,29 @@ jQuery(document).ready(function($) {
         }
 
         wheels.forEach(function(wheel) {
-            const position = wheel.position ? `<p>Pozíció: ${wheel.position}</p>` : '';
+            const position = wheel.position ? `<p><strong>Pozíció:</strong> ${wheel.position}</p>` : '';
+            const size = wheel.size ? `<p><strong>Méret:</strong> ${wheel.size}"</p>` : '';
+            const width = wheel.width ? `<p><strong>Szélesség:</strong> ${wheel.width}J</p>` : '';
+            const offset = wheel.offset ? `<p><strong>Offset:</strong> ET${wheel.offset}</p>` : '<p><strong>Offset:</strong> N/A</p>';
+            const bolt_pattern = wheel.bolt_pattern ? `<p><strong>Csavarok:</strong> ${wheel.bolt_pattern}</p>` : '';
+            const tire_size = wheel.tire_size ? `<p><strong>Gumiméret:</strong> ${wheel.tire_size}</p>` : '';
+
             const wheelCard = `
                 <div class="taf-result-card">
                     <h3>${wheel.make} ${wheel.model}</h3>
                     ${position}
-                    <p>Méret: ${wheel.size}"</p>
-                    <p>Szélesség: ${wheel.width}"</p>
-                    <p>Offset: ${wheel.offset} mm</p>
-                    <p>Csavarok: ${wheel.bolt_pattern}</p>
+                    ${size}
+                    ${width}
+                    ${offset}
+                    ${bolt_pattern}
+                    ${tire_size}
                 </div>
             `;
             $results.append(wheelCard);
         });
+
+        // Debug log
+        console.log('Processed wheels data:', wheels);
     }
 
     // Inicializálás

@@ -174,64 +174,76 @@ class TAF_API {
 
             error_log('TAF Wheels Response with Modification: ' . print_r($wheels_response, true));
 
-            if ($wheels_response && isset($wheels_response['data'])) {
+            if ($wheels_response && isset($wheels_response['data']) && !empty($wheels_response['data'])) {
+                $vehicle_data = reset($wheels_response['data']);
                 $wheels = array();
-                foreach ($wheels_response['data'] as $wheel_data) {
-                    if (isset($wheel_data['wheels']) && is_array($wheel_data['wheels'])) {
-                        foreach ($wheel_data['wheels'] as $wheel) {
+
+                // Technikai adatok kinyerése
+                $bolt_pattern = '';
+                if (isset($vehicle_data['technical']) && isset($vehicle_data['technical']['bolt_pattern'])) {
+                    $bolt_pattern = $vehicle_data['technical']['bolt_pattern'];
+                }
+
+                // Kerekek feldolgozása
+                if (isset($vehicle_data['wheels']) && is_array($vehicle_data['wheels'])) {
+                    foreach ($vehicle_data['wheels'] as $wheel_set) {
+                        if (isset($wheel_set['front'])) {
+                            $front = $wheel_set['front'];
+                            $rim_info = $this->parse_rim_info($front['rim']);
                             $wheels[] = array(
                                 'make' => $make,
                                 'model' => $model,
-                                'size' => isset($wheel['rim_diameter']) ? $wheel['rim_diameter'] : '',
-                                'width' => isset($wheel['rim_width']) ? $wheel['rim_width'] : '',
-                                'offset' => isset($wheel['offset']) ? $wheel['offset'] : '',
-                                'bolt_pattern' => isset($wheel['pcd']) ? $wheel['pcd'] : '',
-                                'position' => isset($wheel_data['position']) ? $wheel_data['position'] : ''
+                                'position' => 'Első',
+                                'size' => $rim_info['diameter'],
+                                'width' => $rim_info['width'],
+                                'offset' => $rim_info['offset'],
+                                'bolt_pattern' => $bolt_pattern,
+                                'tire_size' => $front['tire']
+                            );
+                        }
+
+                        if (isset($wheel_set['rear'])) {
+                            $rear = $wheel_set['rear'];
+                            $rim_info = $this->parse_rim_info($rear['rim']);
+                            $wheels[] = array(
+                                'make' => $make,
+                                'model' => $model,
+                                'position' => 'Hátsó',
+                                'size' => $rim_info['diameter'],
+                                'width' => $rim_info['width'],
+                                'offset' => $rim_info['offset'],
+                                'bolt_pattern' => $bolt_pattern,
+                                'tire_size' => $rear['tire']
                             );
                         }
                     }
                 }
-                return $wheels;
-            }
-        }
 
-        // Ha nem sikerült a modifications-szel, próbáljuk meg a market/regions végpontot
-        $regions_response = $this->make_request('/market/regions/', array());
-        
-        if ($regions_response && isset($regions_response['data']) && !empty($regions_response['data'])) {
-            // Használjuk az első régiót (általában EU)
-            $region = reset($regions_response['data']);
-            
-            $wheels_response = $this->make_request('/search/by_model/', array(
-                'make' => $make,
-                'model' => $model,
-                'year' => $year,
-                'region' => $region['slug']
-            ));
-
-            error_log('TAF Wheels Response with Region: ' . print_r($wheels_response, true));
-
-            if ($wheels_response && isset($wheels_response['data'])) {
-                $wheels = array();
-                foreach ($wheels_response['data'] as $wheel_data) {
-                    if (isset($wheel_data['wheels']) && is_array($wheel_data['wheels'])) {
-                        foreach ($wheel_data['wheels'] as $wheel) {
-                            $wheels[] = array(
-                                'make' => $make,
-                                'model' => $model,
-                                'size' => isset($wheel['rim_diameter']) ? $wheel['rim_diameter'] : '',
-                                'width' => isset($wheel['rim_width']) ? $wheel['rim_width'] : '',
-                                'offset' => isset($wheel['offset']) ? $wheel['offset'] : '',
-                                'bolt_pattern' => isset($wheel['pcd']) ? $wheel['pcd'] : '',
-                                'position' => isset($wheel_data['position']) ? $wheel_data['position'] : ''
-                            );
-                        }
-                    }
-                }
+                error_log('TAF Processed Wheels: ' . print_r($wheels, true));
                 return $wheels;
             }
         }
 
         return array();
+    }
+
+    /**
+     * Felni információk feldolgozása a formátumból (pl. "9Jx19 ET45")
+     */
+    private function parse_rim_info($rim_string) {
+        $result = array(
+            'width' => '',
+            'diameter' => '',
+            'offset' => ''
+        );
+
+        // Példa: "9Jx19" vagy "9Jx19 ET45"
+        if (preg_match('/(\d+\.?\d*)J?x(\d+)(?:\s+ET(-?\d+))?/i', $rim_string, $matches)) {
+            $result['width'] = isset($matches[1]) ? $matches[1] : '';
+            $result['diameter'] = isset($matches[2]) ? $matches[2] : '';
+            $result['offset'] = isset($matches[3]) ? $matches[3] : '';
+        }
+
+        return $result;
     }
 } 
