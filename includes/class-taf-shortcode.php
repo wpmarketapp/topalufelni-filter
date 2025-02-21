@@ -26,9 +26,12 @@ class TAF_Shortcode {
      */
     public function render_filter($atts) {
         // Ellenőrizzük a developer módot
-        $settings = get_option('taf_plugin_settings');
+        $settings = get_option('taf_plugin_settings', array(
+            'dev_mode' => false
+        ));
         $is_dev_mode = isset($settings['dev_mode']) && $settings['dev_mode'];
 
+        // Kimeneti pufferelés indítása
         ob_start();
         ?>
         <div class="taf-container">
@@ -65,7 +68,9 @@ class TAF_Shortcode {
             <div class="taf-results"></div>
         </div>
         <?php
-        return ob_get_clean();
+        // Puffer tartalmának visszaadása és törlése
+        $output = ob_get_clean();
+        return $output;
     }
 
     /**
