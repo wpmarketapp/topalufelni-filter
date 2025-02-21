@@ -91,12 +91,6 @@ $settings = get_option('taf_plugin_settings', array(
             <li>Reszponzív dizájn</li>
         </ul>
     </div>
-
-    <div class="card">
-        <h2>Támogatás</h2>
-        <p>Ha kérdésed vagy problémád van a plugin használatával kapcsolatban, keress bátran:</p>
-        <p><strong>Email:</strong> pusztaizsomborr@gmail.com</p>
-    </div>
 </div>
 
 <style>
