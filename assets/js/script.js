@@ -195,13 +195,18 @@ jQuery(document).ready(function($) {
         const make = $makeSelect.val();
         const model = $modelSelect.val();
         const year = $yearSelect.val();
+        const $submitButton = $(this).find('button[type="submit"]');
 
         if (!make || !model || !year) {
             showError('Kérlek válassz ki minden mezőt!');
             return;
         }
 
-        searchWheels(make, model, year);
+        // Gomb betöltési állapot
+        $submitButton.addClass('loading');
+        searchWheels(make, model, year).finally(() => {
+            $submitButton.removeClass('loading');
+        });
     });
 
     function searchWheels(make, model, year) {
@@ -209,7 +214,7 @@ jQuery(document).ready(function($) {
         $error.hide();
         $results.empty();
 
-        $.ajax({
+        return $.ajax({
             url: tafAjax.ajaxurl,
             type: 'POST',
             data: {
@@ -220,17 +225,20 @@ jQuery(document).ready(function($) {
                 nonce: tafAjax.nonce
             },
             success: function(response) {
-                console.log('Wheels response:', response); // Debug log
-                window.lastResponse = response; // Mentjük a választ
+                console.log('Wheels response:', response);
+                window.lastResponse = response;
 
                 if (response.success && Array.isArray(response.data)) {
                     displayResults(response.data);
+                    // Smooth scroll az eredményekhez
+                    $('html, body').animate({
+                        scrollTop: $results.offset().top - 50
+                    }, 500);
                 } else {
                     let message = response.data && response.data.message 
                         ? response.data.message 
                         : 'Hiba történt a keresés során.';
 
-                    // Debug információk megjelenítése
                     if (response.data && response.data.debug) {
                         const debug = response.data.debug;
                         message += '<div class="taf-debug-info" style="background: #fff; padding: 20px; margin-top: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">';
