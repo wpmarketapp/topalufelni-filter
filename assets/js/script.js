@@ -220,8 +220,9 @@ jQuery(document).ready(function($) {
                 nonce: tafAjax.nonce
             },
             success: function(response) {
-                console.log('Wheels response:', response);
-                
+                console.log('Wheels response:', response); // Debug log
+                window.lastResponse = response; // Mentjük a választ
+
                 if (response.success && Array.isArray(response.data)) {
                     displayResults(response.data);
                 } else {
@@ -269,14 +270,26 @@ jQuery(document).ready(function($) {
         if (!wheels.length) {
             let errorMessage = 'Nem található elérhető felni a megadott paraméterekkel.';
             
-            // Ha van debug információ, megjelenítem
+            // Debug információk megjelenítése
             if (window.lastResponse && window.lastResponse.data && window.lastResponse.data.debug) {
                 const debug = window.lastResponse.data.debug;
-                errorMessage += '<div class="taf-debug-info">';
-                errorMessage += '<div style="border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; padding: 10px 0; margin: 10px 0; text-align: center; color: #000;">';
-                errorMessage += '<p style="color: #000;"><strong>API által kapott felni méret:</strong> ' + debug.api_sizes + '</p>';
-                errorMessage += '<p style="color: #000;"><strong>Elérhető termékek méretei:</strong> ' + debug.available_sizes + '</p>';
-                errorMessage += '</div>';
+                errorMessage += '<div class="taf-debug-info" style="background: #fff; padding: 20px; margin-top: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">';
+                errorMessage += '<h4 style="color: #000; margin-bottom: 15px;">Debug Információk:</h4>';
+                
+                if (debug.api_sizes) {
+                    errorMessage += '<div style="margin-bottom: 10px;">';
+                    errorMessage += '<p style="color: #000; margin: 5px 0;"><strong>API által kapott felni méret:</strong></p>';
+                    errorMessage += '<p style="color: #000; background: #f8f9fa; padding: 10px; border-radius: 4px;">' + debug.api_sizes + '</p>';
+                    errorMessage += '</div>';
+                }
+                
+                if (debug.available_sizes) {
+                    errorMessage += '<div style="margin-bottom: 10px;">';
+                    errorMessage += '<p style="color: #000; margin: 5px 0;"><strong>Elérhető termékek méretei:</strong></p>';
+                    errorMessage += '<p style="color: #000; background: #f8f9fa; padding: 10px; border-radius: 4px;">' + debug.available_sizes + '</p>';
+                    errorMessage += '</div>';
+                }
+                
                 errorMessage += '</div>';
             }
             
@@ -284,47 +297,59 @@ jQuery(document).ready(function($) {
             return;
         }
 
-        let hasProducts = false;
         let resultsHtml = '';
-
         wheels.forEach(function(wheel) {
-            if (wheel.matching_products && wheel.matching_products.length > 0) {
-                hasProducts = true;
-                wheel.matching_products.forEach(product => {
-                    resultsHtml += `
-                        <div class="taf-result-card">
-                            <a href="${product.permalink}" class="taf-product-link">
-                                ${product.image_url ? 
-                                    `<div class="taf-product-image">
-                                        <img src="${product.image_url}" alt="${product.name}">
-                                    </div>` : 
-                                    ''
-                                }
-                                <h3>${product.name}</h3>
-                                <div class="taf-product-price">
-                                    ${product.sale_price ? 
-                                        `<span class="taf-sale-price">${product.sale_price} Ft</span>
-                                         <span class="taf-regular-price">${product.regular_price} Ft</span>` : 
-                                        `<span class="taf-price">${product.price} Ft</span>`
-                                    }
-                                </div>
-                                <div class="taf-specs">
-                                    <span>Méret: ${wheel.size}"</span>
-                                    <span>Osztókör: ${wheel.bolt_pattern}</span>
-                                    ${wheel.position ? `<span>Pozíció: ${wheel.position}</span>` : ''}
-                                </div>
-                            </a>
+            resultsHtml += `
+                <div class="taf-result-card">
+                    <a href="${wheel.permalink}" class="taf-product-link">
+                        ${wheel.image_url ? 
+                            `<div class="taf-product-image">
+                                <img src="${wheel.image_url}" alt="${wheel.name}">
+                            </div>` : 
+                            ''
+                        }
+                        <h3>${wheel.name}</h3>
+                        <div class="taf-product-price">
+                            ${wheel.sale_price ? 
+                                `<span class="taf-sale-price">${wheel.sale_price} Ft</span>
+                                 <span class="taf-regular-price">${wheel.regular_price} Ft</span>` : 
+                                `<span class="taf-price">${wheel.price} Ft</span>`
+                            }
                         </div>
-                    `;
-                });
-            }
+                        <div class="taf-specs">
+                            <span>Méret: ${wheel.size}"</span>
+                            ${wheel.bolt_pattern ? `<span>Osztókör: ${wheel.bolt_pattern}</span>` : ''}
+                        </div>
+                    </a>
+                </div>
+            `;
         });
 
-        if (!hasProducts) {
-            $results.html('<p>Nem található elérhető felni a megadott paraméterekkel.</p>');
-        } else {
-            $results.html(resultsHtml);
+        // Debug információk hozzáadása az eredményekhez
+        if (window.lastResponse && window.lastResponse.data && window.lastResponse.data.debug) {
+            const debug = window.lastResponse.data.debug;
+            resultsHtml += '<div class="taf-debug-info" style="background: #fff; padding: 20px; margin-top: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">';
+            resultsHtml += '<h4 style="color: #000; margin-bottom: 15px;">Debug Információk:</h4>';
+            
+            if (debug.api_sizes) {
+                resultsHtml += '<div style="margin-bottom: 10px;">';
+                resultsHtml += '<p style="color: #000; margin: 5px 0;"><strong>API által kapott felni méret:</strong></p>';
+                resultsHtml += '<p style="color: #000; background: #f8f9fa; padding: 10px; border-radius: 4px;">' + debug.api_sizes + '</p>';
+                resultsHtml += '</div>';
+            }
+            
+            if (debug.available_sizes) {
+                resultsHtml += '<div style="margin-bottom: 10px;">';
+                resultsHtml += '<p style="color: #000; margin: 5px 0;"><strong>Elérhető termékek méretei:</strong></p>';
+                resultsHtml += '<p style="color: #000; background: #f8f9fa; padding: 10px; border-radius: 4px;">' + debug.available_sizes + '</p>';
+                resultsHtml += '</div>';
+            }
+            
+            resultsHtml += '</div>';
         }
+
+        console.log('Megjelenítendő HTML:', resultsHtml); // Debug log
+        $results.html(resultsHtml);
     }
 
     // Minden felni gomb kezelése
