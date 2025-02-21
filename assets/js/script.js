@@ -11,38 +11,88 @@ jQuery(document).ready(function($) {
     const $error = $('.taf-error');
     const $results = $('.taf-results');
 
+    // Session adatok visszatöltése
+    function restoreSessionData() {
+        const sessionData = sessionStorage.getItem('taf_filter_data');
+        if (sessionData) {
+            const data = JSON.parse(sessionData);
+            
+            // Gyártók betöltése után állítjuk be a kiválasztott értéket
+            loadMakes().then(() => {
+                if (data.make) {
+                    $makeSelect.val(data.make);
+                    // Modellek betöltése után állítjuk be a kiválasztott értéket
+                    loadModels(data.make).then(() => {
+                        if (data.model) {
+                            $modelSelect.val(data.model);
+                            // Évek betöltése után állítjuk be a kiválasztott értéket
+                            loadYears(data.make, data.model).then(() => {
+                                if (data.year) {
+                                    $yearSelect.val(data.year);
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+
+            // Találatok visszaállítása
+            if (data.results) {
+                displayResults(data.results);
+            }
+        } else {
+            loadMakes();
+        }
+    }
+
+    // Session adatok mentése
+    function saveSessionData() {
+        const data = {
+            make: $makeSelect.val(),
+            model: $modelSelect.val(),
+            year: $yearSelect.val(),
+            results: window.lastResponse && window.lastResponse.success ? window.lastResponse.data : null
+        };
+        sessionStorage.setItem('taf_filter_data', JSON.stringify(data));
+    }
+
     // Gyártók betöltése
     function loadMakes() {
         $loading.show();
         $error.hide();
         $makeSelect.prop('disabled', true);
 
-        $.ajax({
-            url: tafAjax.ajaxurl,
-            type: 'POST',
-            data: {
-                action: 'taf_get_makes',
-                nonce: tafAjax.nonce
-            },
-            success: function(response) {
-                console.log('Makes response:', response);
-                if (response.success && Array.isArray(response.data)) {
-                    makes = response.data;
-                    populateMakeSelect();
-                } else {
-                    const message = response.data && response.data.message 
-                        ? response.data.message 
-                        : 'Hiba történt a gyártók betöltése közben.';
-                    showError(message);
+        return new Promise((resolve, reject) => {
+            $.ajax({
+                url: tafAjax.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'taf_get_makes',
+                    nonce: tafAjax.nonce
+                },
+                success: function(response) {
+                    console.log('Makes response:', response);
+                    if (response.success && Array.isArray(response.data)) {
+                        makes = response.data;
+                        populateMakeSelect();
+                        resolve();
+                    } else {
+                        const message = response.data && response.data.message 
+                            ? response.data.message 
+                            : 'Hiba történt a gyártók betöltése közben.';
+                        showError(message);
+                        reject(message);
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.error('Makes error:', textStatus, errorThrown);
+                    showError('Hiba történt a szerverrel való kommunikáció során.');
+                    reject(errorThrown);
+                },
+                complete: function() {
+                    $loading.hide();
                 }
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                console.error('Makes error:', textStatus, errorThrown);
-                showError('Hiba történt a szerverrel való kommunikáció során.');
-            },
-            complete: function() {
-                $loading.hide();
-            }
+            });
         });
     }
 
@@ -53,33 +103,38 @@ jQuery(document).ready(function($) {
         $modelSelect.empty().append('<option value="">Válassz modellt...</option>').prop('disabled', true);
         $yearSelect.empty().append('<option value="">Válassz évet...</option>').prop('disabled', true);
 
-        $.ajax({
-            url: tafAjax.ajaxurl,
-            type: 'POST',
-            data: {
-                action: 'taf_get_models',
-                make: make,
-                nonce: tafAjax.nonce
-            },
-            success: function(response) {
-                console.log('Models response:', response);
-                if (response.success && Array.isArray(response.data)) {
-                    models = response.data;
-                    populateModelSelect();
-                } else {
-                    const message = response.data && response.data.message 
-                        ? response.data.message 
-                        : 'Hiba történt a modellek betöltése közben.';
-                    showError(message);
+        return new Promise((resolve, reject) => {
+            $.ajax({
+                url: tafAjax.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'taf_get_models',
+                    make: make,
+                    nonce: tafAjax.nonce
+                },
+                success: function(response) {
+                    console.log('Models response:', response);
+                    if (response.success && Array.isArray(response.data)) {
+                        models = response.data;
+                        populateModelSelect();
+                        resolve();
+                    } else {
+                        const message = response.data && response.data.message 
+                            ? response.data.message 
+                            : 'Hiba történt a modellek betöltése közben.';
+                        showError(message);
+                        reject(message);
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.error('Models error:', textStatus, errorThrown);
+                    showError('Hiba történt a szerverrel való kommunikáció során.');
+                    reject(errorThrown);
+                },
+                complete: function() {
+                    $loading.hide();
                 }
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                console.error('Models error:', textStatus, errorThrown);
-                showError('Hiba történt a szerverrel való kommunikáció során.');
-            },
-            complete: function() {
-                $loading.hide();
-            }
+            });
         });
     }
 
@@ -89,34 +144,39 @@ jQuery(document).ready(function($) {
         $error.hide();
         $yearSelect.empty().append('<option value="">Válassz évet...</option>').prop('disabled', true);
 
-        $.ajax({
-            url: tafAjax.ajaxurl,
-            type: 'POST',
-            data: {
-                action: 'taf_get_years',
-                make: make,
-                model: model,
-                nonce: tafAjax.nonce
-            },
-            success: function(response) {
-                console.log('Years response:', response);
-                if (response.success && Array.isArray(response.data)) {
-                    years = response.data;
-                    populateYearSelect();
-                } else {
-                    const message = response.data && response.data.message 
-                        ? response.data.message 
-                        : 'Hiba történt az évek betöltése közben.';
-                    showError(message);
+        return new Promise((resolve, reject) => {
+            $.ajax({
+                url: tafAjax.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'taf_get_years',
+                    make: make,
+                    model: model,
+                    nonce: tafAjax.nonce
+                },
+                success: function(response) {
+                    console.log('Years response:', response);
+                    if (response.success && Array.isArray(response.data)) {
+                        years = response.data;
+                        populateYearSelect();
+                        resolve();
+                    } else {
+                        const message = response.data && response.data.message 
+                            ? response.data.message 
+                            : 'Hiba történt az évek betöltése közben.';
+                        showError(message);
+                        reject(message);
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.error('Years error:', textStatus, errorThrown);
+                    showError('Hiba történt a szerverrel való kommunikáció során.');
+                    reject(errorThrown);
+                },
+                complete: function() {
+                    $loading.hide();
                 }
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                console.error('Years error:', textStatus, errorThrown);
-                showError('Hiba történt a szerverrel való kommunikáció során.');
-            },
-            complete: function() {
-                $loading.hide();
-            }
+            });
         });
     }
 
@@ -172,10 +232,11 @@ jQuery(document).ready(function($) {
     $makeSelect.on('change', function() {
         const selectedMake = $(this).val();
         if (selectedMake) {
-            loadModels(selectedMake);
+            loadModels(selectedMake).then(() => saveSessionData());
         } else {
             $modelSelect.empty().append('<option value="">Válassz modellt...</option>').prop('disabled', true);
             $yearSelect.empty().append('<option value="">Válassz évet...</option>').prop('disabled', true);
+            saveSessionData();
         }
     });
 
@@ -183,10 +244,15 @@ jQuery(document).ready(function($) {
         const selectedMake = $makeSelect.val();
         const selectedModel = $(this).val();
         if (selectedMake && selectedModel) {
-            loadYears(selectedMake, selectedModel);
+            loadYears(selectedMake, selectedModel).then(() => saveSessionData());
         } else {
             $yearSelect.empty().append('<option value="">Válassz évet...</option>').prop('disabled', true);
+            saveSessionData();
         }
+    });
+
+    $yearSelect.on('change', function() {
+        saveSessionData();
     });
 
     // Keresés indítása
@@ -220,17 +286,17 @@ jQuery(document).ready(function($) {
                 nonce: tafAjax.nonce
             },
             success: function(response) {
-                console.log('Wheels response:', response); // Debug log
-                window.lastResponse = response; // Mentjük a választ
+                console.log('Wheels response:', response);
+                window.lastResponse = response;
 
                 if (response.success && Array.isArray(response.data)) {
                     displayResults(response.data);
+                    saveSessionData();
                 } else {
                     let message = response.data && response.data.message 
                         ? response.data.message 
                         : 'Hiba történt a keresés során.';
 
-                    // Debug információk megjelenítése
                     if (response.data && response.data.debug) {
                         const debug = response.data.debug;
                         message += '<div class="taf-debug-info" style="background: #fff; padding: 20px; margin-top: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">';
@@ -428,6 +494,6 @@ jQuery(document).ready(function($) {
         $results.html(resultsHtml);
     }
 
-    // Inicializálás
-    loadMakes();
+    // Inicializálás - most a sessionStorage-ből töltjük vissza az adatokat
+    restoreSessionData();
 }); 
