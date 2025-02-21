@@ -164,36 +164,44 @@ class TAF_Shortcode {
             return;
         }
 
-        // Ellenőrizzük, hogy a WooCommerce aktív-e
-        if (!class_exists('WooCommerce')) {
-            error_log('TAF Error: WooCommerce nincs aktiválva');
-            wp_send_json_error(array(
-                'message' => 'WooCommerce nincs aktiválva.',
-                'code' => 'woocommerce_inactive'
-            ));
-            return;
-        }
-
         // Lekérjük a felni specifikációkat
-        $wheel_specs = $this->api->get_wheel_specs($make, $model, $year);
+        $response = $this->api->get_wheel_specs($make, $model, $year);
 
-        if (!is_array($wheel_specs) || empty($wheel_specs)) {
-            wp_send_json_error(array(
-                'message' => 'Nem található felni a megadott paraméterekkel.',
-                'code' => 'no_results'
-            ));
+        // Ha hiba történt vagy nincs adat
+        if (isset($response['error']) || empty($response['wheel_sets'])) {
+            if ($is_dev_mode) {
+                wp_send_json_error(array(
+                    'message' => isset($response['message']) ? $response['message'] : 'Nem található felni a megadott paraméterekkel.',
+                    'code' => 'no_results',
+                    'debug' => array(
+                        'api_response' => $response['api_response'],
+                        'car_specs' => array(
+                            'make' => $make,
+                            'model' => $model,
+                            'year' => $year
+                        )
+                    )
+                ));
+            } else {
+                wp_send_json_error(array(
+                    'message' => 'Nem található felni a megadott paraméterekkel.',
+                    'code' => 'no_results'
+                ));
+            }
             return;
         }
 
         // Összegyűjtjük a méreteket és osztóköröket
         $sizes = array();
         $bolt_patterns = array();
-        foreach ($wheel_specs as $spec) {
-            if (!empty($spec['size'])) {
-                $sizes[] = sanitize_title($spec['size']);
+        foreach ($response['wheel_sets'] as $set) {
+            if (isset($set['front'])) {
+                $sizes[] = sanitize_title($set['front']['diameter']);
+                $bolt_patterns[] = sanitize_title(str_replace('x', '-', $set['front']['bolt_pattern']));
             }
-            if (!empty($spec['bolt_pattern'])) {
-                $bolt_patterns[] = sanitize_title(str_replace('x', '-', $spec['bolt_pattern']));
+            if (isset($set['rear'])) {
+                $sizes[] = sanitize_title($set['rear']['diameter']);
+                $bolt_patterns[] = sanitize_title(str_replace('x', '-', $set['rear']['bolt_pattern']));
             }
         }
 
@@ -296,16 +304,20 @@ class TAF_Shortcode {
                     'message' => 'Nem található elérhető felni a megadott paraméterekkel.',
                     'code' => 'no_matching_wheels',
                     'debug' => array(
+                        'api_response' => $response['debug'],
                         'car_specs' => array(
                             'make' => $make,
                             'model' => $model,
                             'year' => $year,
-                            'required_sizes' => array_unique($sizes),
-                            'required_bolt_patterns' => array_unique($bolt_patterns)
+                            'wheel_sets' => $response['wheel_sets']
                         ),
                         'available_products' => array(
                             'sizes' => array_unique($available_sizes),
                             'bolt_patterns' => array_unique($available_bolt_patterns)
+                        ),
+                        'search_params' => array(
+                            'sizes' => array_unique($sizes),
+                            'bolt_patterns' => array_unique($bolt_patterns)
                         )
                     )
                 );
