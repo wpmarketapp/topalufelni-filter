@@ -151,11 +151,29 @@ class TAF_API {
      * Felni adatok lekérése
      */
     public function get_wheel_specs($make, $model, $year) {
-        // Konkrét modifikáció lekérése az adott évhez
-        $response = $this->make_request('/search/by_model/', array(
+        // Először lekérjük a modifications adatokat
+        $mod_response = $this->make_request('/modifications/', array(
             'make' => $make,
             'model' => $model,
             'year' => $year
+        ));
+
+        error_log('TAF Modifications Response: ' . print_r($mod_response, true));
+
+        if (!$mod_response || !isset($mod_response['data']) || empty($mod_response['data'])) {
+            error_log('TAF Error: No modifications found');
+            return array();
+        }
+
+        // Használjuk az első módosítást
+        $modification = reset($mod_response['data']);
+
+        // Most már lekérhetjük a felni adatokat a módosítással együtt
+        $response = $this->make_request('/search/by_model/', array(
+            'make' => $make,
+            'model' => $model,
+            'year' => $year,
+            'modification' => $modification['slug']
         ));
 
         error_log('TAF Search Response: ' . print_r($response, true));
