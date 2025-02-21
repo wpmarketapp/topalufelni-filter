@@ -268,8 +268,35 @@ class TAF_Shortcode {
         if (!empty($matching_wheels)) {
             wp_send_json_success($matching_wheels);
         } else {
+            // Készítsünk egy érthető hibaüzenetet a méretekkel
+            $error_message = 'Nem található elérhető felni a megadott paraméterekkel.<br><br>';
+            $error_message .= 'API által visszaadott méretek: ' . implode(', ', array_map(function($size) { 
+                return $size . '"'; 
+            }, $needed_sizes)) . '<br>';
+
+            // Lekérjük az összes elérhető méretet
+            $available_terms = get_terms(array(
+                'taxonomy' => 'pa_atmero',
+                'hide_empty' => true
+            ));
+
+            $available_sizes = array();
+            if (!is_wp_error($available_terms)) {
+                foreach ($available_terms as $term) {
+                    $size = preg_replace('/[^0-9]/', '', $term->name);
+                    if (!empty($size)) {
+                        $available_sizes[] = $size;
+                    }
+                }
+                sort($available_sizes);
+            }
+
+            $error_message .= 'Elérhető méretek: ' . implode(', ', array_map(function($size) {
+                return $size . '"';
+            }, $available_sizes));
+
             wp_send_json_error(array(
-                'message' => 'Nem található elérhető felni a megadott paraméterekkel.',
+                'message' => $error_message,
                 'code' => 'no_matching_wheels'
             ));
         }
