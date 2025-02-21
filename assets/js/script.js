@@ -221,6 +221,9 @@ jQuery(document).ready(function($) {
             },
             success: function(response) {
                 console.log('Wheels response:', response);
+                // Mentjük a response-t egy globális változóba
+                window.lastResponse = response;
+                
                 if (response.success && Array.isArray(response.data)) {
                     displayResults(response.data);
                 } else {
@@ -256,38 +259,13 @@ jQuery(document).ready(function($) {
             let errorMessage = 'Nem található elérhető felni a megadott paraméterekkel.';
             
             // Ha van debug információ, megjelenítem
-            if (response.data && response.data.debug) {
-                const debug = response.data.debug;
+            if (window.lastResponse && window.lastResponse.data && window.lastResponse.data.debug) {
+                const debug = window.lastResponse.data.debug;
                 errorMessage += '<div class="taf-debug-info">';
-                errorMessage += '<h4>Debug Információk:</h4>';
-                
-                // Autó specifikációk
-                errorMessage += '<div class="taf-debug-section">';
-                errorMessage += '<h5>Autó Specifikációk:</h5>';
-                errorMessage += `<p>Gyártó: ${debug.car_specs.make}</p>`;
-                errorMessage += `<p>Modell: ${debug.car_specs.model}</p>`;
-                errorMessage += `<p>Év: ${debug.car_specs.year}</p>`;
-                
-                // Szükséges méretek
-                if (debug.car_specs.required_sizes.length > 0) {
-                    errorMessage += '<p>Szükséges felni méretek: ' + debug.car_specs.required_sizes.join(', ') + '</p>';
-                }
-                if (debug.car_specs.required_bolt_patterns.length > 0) {
-                    errorMessage += '<p>Szükséges osztókörök: ' + debug.car_specs.required_bolt_patterns.join(', ') + '</p>';
-                }
+                errorMessage += '<div style="border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; padding: 10px 0; margin: 10px 0; text-align: center; color: #000;">';
+                errorMessage += '<p style="color: #000;"><strong>API által kapott felni méret:</strong> ' + debug.api_sizes + '</p>';
+                errorMessage += '<p style="color: #000;"><strong>Elérhető termékek méretei:</strong> ' + debug.available_sizes + '</p>';
                 errorMessage += '</div>';
-                
-                // Elérhető termékek
-                errorMessage += '<div class="taf-debug-section">';
-                errorMessage += '<h5>Elérhető Termékek:</h5>';
-                if (debug.available_products.sizes.length > 0) {
-                    errorMessage += '<p>Elérhető felni méretek: ' + debug.available_products.sizes.join(', ') + '</p>';
-                }
-                if (debug.available_products.bolt_patterns.length > 0) {
-                    errorMessage += '<p>Elérhető osztókörök: ' + debug.available_products.bolt_patterns.join(', ') + '</p>';
-                }
-                errorMessage += '</div>';
-                
                 errorMessage += '</div>';
             }
             
