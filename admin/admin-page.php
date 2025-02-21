@@ -7,7 +7,8 @@ if (!defined('ABSPATH')) {
 if (isset($_POST['taf_save_settings']) && check_admin_referer('taf_settings_nonce')) {
     $settings = array(
         'api_key' => sanitize_text_field($_POST['api_key']),
-        'cache_time' => absint($_POST['cache_time'])
+        'cache_time' => absint($_POST['cache_time']),
+        'dev_mode' => isset($_POST['dev_mode']) ? true : false
     );
     
     update_option('taf_plugin_settings', $settings);
@@ -17,7 +18,8 @@ if (isset($_POST['taf_save_settings']) && check_admin_referer('taf_settings_nonc
 // Aktuális beállítások lekérése
 $settings = get_option('taf_plugin_settings', array(
     'api_key' => TAF_API_KEY,
-    'cache_time' => 86400
+    'cache_time' => 86400,
+    'dev_mode' => false
 ));
 ?>
 
@@ -57,6 +59,23 @@ $settings = get_option('taf_plugin_settings', array(
                                class="regular-text">
                         <p class="description">
                             Az API válaszok cache-elési ideje másodpercekben. Alapértelmezett: 86400 (24 óra)
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row">
+                        <label for="dev_mode">Developer Mód</label>
+                    </th>
+                    <td>
+                        <label>
+                            <input type="checkbox" 
+                                   id="dev_mode" 
+                                   name="dev_mode" 
+                                   <?php checked($settings['dev_mode'], true); ?>>
+                            Developer mód bekapcsolása
+                        </label>
+                        <p class="description">
+                            Ha be van kapcsolva, extra funkciók jelennek meg a felületen (pl. "Minden felni" gomb).
                         </p>
                     </td>
                 </tr>

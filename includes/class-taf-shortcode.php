@@ -17,12 +17,18 @@ class TAF_Shortcode {
         add_action('wp_ajax_nopriv_taf_get_years', array($this, 'ajax_get_years'));
         add_action('wp_ajax_taf_search_wheels', array($this, 'ajax_search_wheels'));
         add_action('wp_ajax_nopriv_taf_search_wheels', array($this, 'ajax_search_wheels'));
+        add_action('wp_ajax_taf_get_all_wheels', array($this, 'ajax_get_all_wheels'));
+        add_action('wp_ajax_nopriv_taf_get_all_wheels', array($this, 'ajax_get_all_wheels'));
     }
 
     /**
      * Szűrő megjelenítése
      */
     public function render_filter($atts) {
+        // Ellenőrizzük a developer módot
+        $settings = get_option('taf_plugin_settings');
+        $is_dev_mode = isset($settings['dev_mode']) && $settings['dev_mode'];
+
         ob_start();
         ?>
         <div class="taf-container">
@@ -49,6 +55,9 @@ class TAF_Shortcode {
                 </div>
 
                 <button type="submit" class="taf-button">Keresés</button>
+                <?php if ($is_dev_mode): ?>
+                <button type="button" id="taf-all-wheels" class="taf-button taf-button-secondary">Minden felni</button>
+                <?php endif; ?>
             </form>
 
             <div class="taf-error"></div>
@@ -168,6 +177,66 @@ class TAF_Shortcode {
             wp_send_json_error(array(
                 'message' => 'Nem sikerült betölteni a felni adatokat.',
                 'code' => 'wheels_error'
+            ));
+        }
+    }
+
+    /**
+     * Összes felni lekérése
+     */
+    public function ajax_get_all_wheels() {
+        check_ajax_referer('taf-ajax-nonce', 'nonce');
+        
+        // Ellenőrizzük a developer módot
+        $settings = get_option('taf_plugin_settings');
+        if (!isset($settings['dev_mode']) || !$settings['dev_mode']) {
+            wp_send_json_error(array(
+                'message' => 'Developer mód nincs bekapcsolva.',
+                'code' => 'dev_mode_disabled'
+            ));
+            return;
+        }
+
+        // Lekérjük az összes terméket
+        $args = array(
+            'post_type' => 'product',
+            'post_status' => 'publish',
+            'posts_per_page' => -1,
+            'tax_query' => array(
+                'relation' => 'AND',
+                array(
+                    'taxonomy' => 'product_cat',
+                    'field' => 'slug',
+                    'terms' => 'felni'
+                )
+            )
+        );
+
+        $products = wc_get_products($args);
+        
+        if (!empty($products)) {
+            $all_wheels = array();
+            foreach ($products as $product) {
+                if ($product->is_in_stock()) {
+                    $all_wheels[] = array(
+                        'id' => $product->get_id(),
+                        'name' => $product->get_name(),
+                        'price' => $product->get_price(),
+                        'regular_price' => $product->get_regular_price(),
+                        'sale_price' => $product->get_sale_price(),
+                        'stock_quantity' => $product->get_stock_quantity(),
+                        'permalink' => $product->get_permalink(),
+                        'image_url' => wp_get_attachment_image_url($product->get_image_id(), 'medium'),
+                        'size' => $product->get_attribute('pa_atmero'),
+                        'bolt_pattern' => $product->get_attribute('pa_osztokor')
+                    );
+                }
+            }
+            wp_send_json_success($all_wheels);
+        } else {
+            wp_send_json_error(array(
+                'message' => 'Nem található elérhető felni.',
+                'code' => 'no_wheels'
             ));
         }
     }

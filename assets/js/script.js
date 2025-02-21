@@ -292,6 +292,82 @@ jQuery(document).ready(function($) {
         console.log('Processed wheels data:', wheels);
     }
 
+    // Minden felni gomb kezelése
+    $('#taf-all-wheels').on('click', function(e) {
+        e.preventDefault();
+        getAllWheels();
+    });
+
+    function getAllWheels() {
+        $loading.show();
+        $error.hide();
+        $results.empty();
+
+        $.ajax({
+            url: tafAjax.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'taf_get_all_wheels',
+                nonce: tafAjax.nonce
+            },
+            success: function(response) {
+                console.log('All wheels response:', response);
+                if (response.success && Array.isArray(response.data)) {
+                    displayAllWheels(response.data);
+                } else {
+                    const message = response.data && response.data.message 
+                        ? response.data.message 
+                        : 'Hiba történt a felnik betöltése közben.';
+                    showError(message);
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error('All wheels error:', textStatus, errorThrown);
+                showError('Hiba történt a szerverrel való kommunikáció során.');
+            },
+            complete: function() {
+                $loading.hide();
+            }
+        });
+    }
+
+    function displayAllWheels(wheels) {
+        if (!wheels.length) {
+            $results.html('<p>Nem található elérhető felni.</p>');
+            return;
+        }
+
+        let resultsHtml = '';
+        wheels.forEach(function(wheel) {
+            resultsHtml += `
+                <div class="taf-result-card">
+                    <a href="${wheel.permalink}" class="taf-product-link">
+                        ${wheel.image_url ? 
+                            `<div class="taf-product-image">
+                                <img src="${wheel.image_url}" alt="${wheel.name}">
+                            </div>` : 
+                            ''
+                        }
+                        <h3>${wheel.name}</h3>
+                        <div class="taf-product-price">
+                            ${wheel.sale_price ? 
+                                `<span class="taf-sale-price">${wheel.sale_price} Ft</span>
+                                 <span class="taf-regular-price">${wheel.regular_price} Ft</span>` : 
+                                `<span class="taf-price">${wheel.price} Ft</span>`
+                            }
+                        </div>
+                        <div class="taf-specs">
+                            ${wheel.size ? `<span>Méret: ${wheel.size}"</span>` : ''}
+                            ${wheel.bolt_pattern ? `<span>Osztókör: ${wheel.bolt_pattern}</span>` : ''}
+                        </div>
+                    </a>
+                </div>
+            `;
+        });
+
+        $results.html(resultsHtml);
+    }
+
     // Inicializálás
     loadMakes();
 }); 
