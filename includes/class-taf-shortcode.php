@@ -33,44 +33,51 @@ class TAF_Shortcode {
 
         // Kimeneti pufferelés indítása
         ob_start();
-        ?>
-        <div class="taf-container">
-            <form id="taf-search-form" class="taf-filter-form">
-                <div class="taf-select-group">
-                    <label for="taf-make">Gyártó:</label>
-                    <select id="taf-make" class="taf-select" disabled>
-                        <option value="">Válassz gyártót...</option>
-                    </select>
-                </div>
+        try {
+            ?>
+            <div class="taf-container">
+                <form id="taf-search-form" class="taf-filter-form">
+                    <div class="taf-select-group">
+                        <label for="taf-make">Gyártó:</label>
+                        <select id="taf-make" class="taf-select" disabled>
+                            <option value="">Válassz gyártót...</option>
+                        </select>
+                    </div>
 
-                <div class="taf-select-group">
-                    <label for="taf-model">Modell:</label>
-                    <select id="taf-model" class="taf-select" disabled>
-                        <option value="">Válassz modellt...</option>
-                    </select>
-                </div>
+                    <div class="taf-select-group">
+                        <label for="taf-model">Modell:</label>
+                        <select id="taf-model" class="taf-select" disabled>
+                            <option value="">Válassz modellt...</option>
+                        </select>
+                    </div>
 
-                <div class="taf-select-group">
-                    <label for="taf-year">Évjárat:</label>
-                    <select id="taf-year" class="taf-select" disabled>
-                        <option value="">Válassz évet...</option>
-                    </select>
-                </div>
+                    <div class="taf-select-group">
+                        <label for="taf-year">Évjárat:</label>
+                        <select id="taf-year" class="taf-select" disabled>
+                            <option value="">Válassz évet...</option>
+                        </select>
+                    </div>
 
-                <button type="submit" class="taf-button">Keresés</button>
-                <?php if ($is_dev_mode): ?>
-                <button type="button" id="taf-all-wheels" class="taf-button taf-button-secondary">Developer Test</button>
-                <?php endif; ?>
-            </form>
+                    <button type="submit" class="taf-button">Keresés</button>
+                    <?php if ($is_dev_mode): ?>
+                    <button type="button" id="taf-all-wheels" class="taf-button taf-button-secondary">Developer Test</button>
+                    <?php endif; ?>
+                </form>
 
-            <div class="taf-error"></div>
-            <div class="taf-loading">Betöltés...</div>
-            <div class="taf-results"></div>
-        </div>
-        <?php
-        // Puffer tartalmának visszaadása és törlése
-        $output = ob_get_clean();
-        return $output;
+                <div class="taf-error"></div>
+                <div class="taf-loading">Betöltés...</div>
+                <div class="taf-results"></div>
+            </div>
+            <?php
+            // Puffer tartalmának lekérése és törlése
+            $output = ob_get_clean();
+            return $output;
+        } catch (Exception $e) {
+            // Hiba esetén töröljük a puffert és naplózzuk a hibát
+            ob_end_clean();
+            error_log('TAF Error in render_filter: ' . $e->getMessage());
+            return '<div class="taf-error">Hiba történt a szűrő betöltése közben.</div>';
+        }
     }
 
     /**
