@@ -247,12 +247,14 @@ jQuery(document).ready(function($) {
         }
 
         wheels.forEach(function(wheel) {
+            const position = wheel.position ? `<p>Pozíció: ${wheel.position}</p>` : '';
             const wheelCard = `
                 <div class="taf-result-card">
                     <h3>${wheel.make} ${wheel.model}</h3>
+                    ${position}
                     <p>Méret: ${wheel.size}"</p>
-                    <p>Szélesség: ${wheel.width}</p>
-                    <p>Offset: ${wheel.offset}</p>
+                    <p>Szélesség: ${wheel.width}"</p>
+                    <p>Offset: ${wheel.offset} mm</p>
                     <p>Csavarok: ${wheel.bolt_pattern}</p>
                 </div>
             `;

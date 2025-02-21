@@ -151,66 +151,84 @@ class TAF_API {
      * Felni adatok lekérése
      */
     public function get_wheel_specs($make, $model, $year) {
-        // Először lekérjük a trim/generation adatokat
-        $trim_response = $this->make_request('/search/by_model/', array(
+        // Először próbáljuk meg a modifications végpontot
+        $mod_response = $this->make_request('/modifications/', array(
             'make' => $make,
             'model' => $model,
             'year' => $year
         ));
 
-        error_log('TAF Trim Response: ' . print_r($trim_response, true));
+        error_log('TAF Modifications Response: ' . print_r($mod_response, true));
 
-        if (!$trim_response || !isset($trim_response['data']) || empty($trim_response['data'])) {
-            // Ha nincs trim adat, próbáljuk meg közvetlenül a wheels végpontot
-            $response = $this->make_request('/wheels/', array(
+        if ($mod_response && isset($mod_response['data']) && !empty($mod_response['data'])) {
+            // Használjuk az első módosítást
+            $modification = reset($mod_response['data']);
+            
+            // Keressük a felni adatokat a módosítással
+            $wheels_response = $this->make_request('/search/by_model/', array(
                 'make' => $make,
                 'model' => $model,
-                'year' => $year
+                'year' => $year,
+                'modification' => $modification['slug']
             ));
 
-            error_log('TAF Wheels Direct Response: ' . print_r($response, true));
+            error_log('TAF Wheels Response with Modification: ' . print_r($wheels_response, true));
 
-            if ($response && isset($response['data'])) {
+            if ($wheels_response && isset($wheels_response['data'])) {
                 $wheels = array();
-                foreach ($response['data'] as $wheel) {
-                    $wheels[] = array(
-                        'make' => $make,
-                        'model' => $model,
-                        'size' => isset($wheel['rim_diameter']) ? $wheel['rim_diameter'] : '',
-                        'width' => isset($wheel['rim_width']) ? $wheel['rim_width'] : '',
-                        'offset' => isset($wheel['offset']) ? $wheel['offset'] : '',
-                        'bolt_pattern' => isset($wheel['pcd']) ? $wheel['pcd'] : ''
-                    );
+                foreach ($wheels_response['data'] as $wheel_data) {
+                    if (isset($wheel_data['wheels']) && is_array($wheel_data['wheels'])) {
+                        foreach ($wheel_data['wheels'] as $wheel) {
+                            $wheels[] = array(
+                                'make' => $make,
+                                'model' => $model,
+                                'size' => isset($wheel['rim_diameter']) ? $wheel['rim_diameter'] : '',
+                                'width' => isset($wheel['rim_width']) ? $wheel['rim_width'] : '',
+                                'offset' => isset($wheel['offset']) ? $wheel['offset'] : '',
+                                'bolt_pattern' => isset($wheel['pcd']) ? $wheel['pcd'] : '',
+                                'position' => isset($wheel_data['position']) ? $wheel_data['position'] : ''
+                            );
+                        }
+                    }
                 }
                 return $wheels;
             }
-        } else {
-            // Ha van trim adat, használjuk az első trim ID-t
-            $trim = reset($trim_response['data']);
-            if (isset($trim['trim'])) {
-                $wheels_response = $this->make_request('/wheels/', array(
-                    'make' => $make,
-                    'model' => $model,
-                    'year' => $year,
-                    'trim' => $trim['trim']
-                ));
+        }
 
-                error_log('TAF Wheels Response with Trim: ' . print_r($wheels_response, true));
+        // Ha nem sikerült a modifications-szel, próbáljuk meg a market/regions végpontot
+        $regions_response = $this->make_request('/market/regions/', array());
+        
+        if ($regions_response && isset($regions_response['data']) && !empty($regions_response['data'])) {
+            // Használjuk az első régiót (általában EU)
+            $region = reset($regions_response['data']);
+            
+            $wheels_response = $this->make_request('/search/by_model/', array(
+                'make' => $make,
+                'model' => $model,
+                'year' => $year,
+                'region' => $region['slug']
+            ));
 
-                if ($wheels_response && isset($wheels_response['data'])) {
-                    $wheels = array();
-                    foreach ($wheels_response['data'] as $wheel) {
-                        $wheels[] = array(
-                            'make' => $make,
-                            'model' => $model,
-                            'size' => isset($wheel['rim_diameter']) ? $wheel['rim_diameter'] : '',
-                            'width' => isset($wheel['rim_width']) ? $wheel['rim_width'] : '',
-                            'offset' => isset($wheel['offset']) ? $wheel['offset'] : '',
-                            'bolt_pattern' => isset($wheel['pcd']) ? $wheel['pcd'] : ''
-                        );
+            error_log('TAF Wheels Response with Region: ' . print_r($wheels_response, true));
+
+            if ($wheels_response && isset($wheels_response['data'])) {
+                $wheels = array();
+                foreach ($wheels_response['data'] as $wheel_data) {
+                    if (isset($wheel_data['wheels']) && is_array($wheel_data['wheels'])) {
+                        foreach ($wheel_data['wheels'] as $wheel) {
+                            $wheels[] = array(
+                                'make' => $make,
+                                'model' => $model,
+                                'size' => isset($wheel['rim_diameter']) ? $wheel['rim_diameter'] : '',
+                                'width' => isset($wheel['rim_width']) ? $wheel['rim_width'] : '',
+                                'offset' => isset($wheel['offset']) ? $wheel['offset'] : '',
+                                'bolt_pattern' => isset($wheel['pcd']) ? $wheel['pcd'] : '',
+                                'position' => isset($wheel_data['position']) ? $wheel_data['position'] : ''
+                            );
+                        }
                     }
-                    return $wheels;
                 }
+                return $wheels;
             }
         }
 
