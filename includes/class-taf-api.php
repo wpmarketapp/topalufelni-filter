@@ -96,7 +96,20 @@ class TAF_API {
             'model' => $model
         ));
         if ($response && isset($response['data'])) {
-            return $response['data'];
+            // Évek kinyerése és rendezése
+            $years = array();
+            foreach ($response['data'] as $yearData) {
+                if (isset($yearData['end_year']) && $yearData['end_year'] > 0) {
+                    $years[] = $yearData['end_year'];
+                }
+                if (isset($yearData['start_year']) && $yearData['start_year'] > 0) {
+                    $years[] = $yearData['start_year'];
+                }
+            }
+            // Duplikációk eltávolítása és rendezés
+            $years = array_unique($years);
+            rsort($years);
+            return $years;
         }
         return false;
     }

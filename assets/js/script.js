@@ -148,8 +148,12 @@ jQuery(document).ready(function($) {
     function populateYearSelect() {
         $yearSelect.empty().append('<option value="">Válassz évet...</option>');
         if (Array.isArray(years)) {
-            years.forEach(function(year) {
-                $yearSelect.append(`<option value="${year}">${year}</option>`);
+            // Rendezzük az éveket csökkenő sorrendbe
+            const sortedYears = years.sort((a, b) => b - a);
+            sortedYears.forEach(function(year) {
+                // Csak az év értékét használjuk
+                const yearValue = typeof year === 'object' ? year.year : year;
+                $yearSelect.append(`<option value="${yearValue}">${yearValue}</option>`);
             });
             $yearSelect.prop('disabled', false);
         } else {
