@@ -190,10 +190,12 @@ class TAF_Shortcode {
         $api_sizes = array();
         foreach ($response['wheel_sets'] as $set) {
             if (isset($set['front'])) {
-                $api_sizes[] = $set['front']['diameter'] . '"';
+                // Eltávolítjuk a " karaktert a méretből
+                $api_sizes[] = str_replace('"', '', $set['front']['diameter']);
             }
             if (isset($set['rear'])) {
-                $api_sizes[] = $set['rear']['diameter'] . '"';
+                // Eltávolítjuk a " karaktert a méretből
+                $api_sizes[] = str_replace('"', '', $set['rear']['diameter']);
             }
         }
         $api_sizes = array_unique($api_sizes);
@@ -208,10 +210,16 @@ class TAF_Shortcode {
         
         if (!is_wp_error($terms_size)) {
             foreach ($terms_size as $term) {
-                $available_sizes[] = $term->name;
+                // Eltávolítjuk a " karaktert a méretből, ha van
+                $available_sizes[] = str_replace('"', '', $term->name);
             }
             sort($available_sizes);
         }
+
+        // Debug információk előkészítése
+        $debug_api_sizes = array_map(function($size) {
+            return $size . '"';
+        }, $api_sizes);
 
         // Lekérjük a termékeket
         $args = array(
@@ -279,7 +287,7 @@ class TAF_Shortcode {
                     'message' => 'Nem található elérhető felni a megadott paraméterekkel.',
                     'code' => 'no_matching_wheels',
                     'debug' => array(
-                        'api_sizes' => implode(' / ', $api_sizes),
+                        'api_sizes' => implode(' / ', $debug_api_sizes),
                         'available_sizes' => implode(' / ', $available_sizes)
                     )
                 );
