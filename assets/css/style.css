@@ -14,6 +14,7 @@
 
 .taf-select-group {
     margin-bottom: 15px;
+    position: relative;
 }
 
 .taf-select-group label {
@@ -24,65 +25,89 @@
 }
 
 .taf-select {
+    display: block;
     width: 100%;
-    padding: 8px 12px;
+    height: 40px;
+    padding: 8px 24px 8px 12px;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #333;
+    background-color: #fff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%23333' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 4px center;
+    background-size: 24px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    background-color: #fff;
-    font-size: 14px;
-    color: #333;
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right 8px center;
-    background-size: 16px;
-    padding-right: 32px;
-}
-
-.taf-select:disabled {
-    background-color: #f5f5f5;
-    cursor: not-allowed;
-    color: #999;
-}
-
-.taf-select option {
-    color: #333;
-    background-color: #fff;
-    padding: 8px;
-}
-
-.taf-select option:disabled {
-    color: #999;
+    cursor: pointer;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
 .taf-select:focus {
-    outline: none;
     border-color: #007cba;
-    box-shadow: 0 0 0 1px #007cba;
+    outline: 0;
+    box-shadow: 0 0 0 2px rgba(0, 124, 186, 0.25);
+}
+
+.taf-select:disabled {
+    background-color: #e9ecef;
+    opacity: 1;
+    cursor: not-allowed;
+}
+
+.taf-select option {
+    padding: 8px;
+    font-size: 14px;
+    color: #333;
+}
+
+.taf-select option:first-child {
+    color: #666;
 }
 
 .taf-button {
-    background: #007cba;
+    display: block;
+    width: 100%;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.5;
     color: #fff;
+    background-color: #007cba;
     border: none;
-    padding: 10px 20px;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 14px;
-    transition: background 0.3s ease;
-    width: 100%;
-    margin-top: 10px;
+    transition: background-color 0.15s ease-in-out;
+    margin-top: 15px;
 }
 
 .taf-button:hover {
-    background: #006ba1;
+    background-color: #006ba1;
+}
+
+.taf-button:focus {
+    outline: 0;
+    box-shadow: 0 0 0 2px rgba(0, 124, 186, 0.25);
 }
 
 .taf-loading {
     text-align: center;
     padding: 20px;
+    display: none;
+    color: #666;
+}
+
+.taf-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 12px 16px;
+    margin-bottom: 15px;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px;
     display: none;
 }
 
@@ -96,7 +121,7 @@
 .taf-result-card {
     background: #fff;
     border-radius: 8px;
-    padding: 15px;
+    padding: 20px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     transition: transform 0.3s ease;
 }
@@ -105,13 +130,16 @@
     transform: translateY(-5px);
 }
 
-.taf-error {
-    background: #f8d7da;
-    color: #721c24;
-    padding: 10px;
-    border-radius: 4px;
-    margin-bottom: 15px;
-    display: none;
+.taf-result-card h3 {
+    margin: 0 0 15px 0;
+    color: #333;
+    font-size: 16px;
+}
+
+.taf-result-card p {
+    margin: 8px 0;
+    color: #666;
+    font-size: 14px;
 }
 
 /* Reszponzív design */
@@ -123,19 +151,21 @@
     .taf-results {
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     }
+    
+    .taf-select {
+        font-size: 16px; /* Jobb mobilos használhatóság */
+        height: 44px;
+    }
 }
 
-/* Webkit böngészők (Chrome, Safari) */
-.taf-select::-webkit-select-placeholder {
-    color: #333;
-}
-
-/* Firefox */
-.taf-select:-moz-placeholder {
-    color: #333;
-}
-
-/* Internet Explorer */
-.taf-select::-ms-expand {
-    display: none;
+/* Safari specifikus javítás */
+@media not all and (min-resolution:.001dpcm) { 
+    @supports (-webkit-appearance:none) {
+        .taf-select {
+            text-indent: 1px;
+            text-overflow: '';
+            padding-right: 30px;
+            padding-left: 10px;
+        }
+    }
 } 
