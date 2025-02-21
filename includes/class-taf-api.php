@@ -180,7 +180,7 @@ class TAF_API {
 
         if ($response && isset($response['data']) && !empty($response['data'])) {
             $vehicle_data = reset($response['data']);
-            $wheels = array();
+            $wheel_sets = array();
 
             // Technikai adatok kinyerése
             $bolt_pattern = '';
@@ -188,38 +188,74 @@ class TAF_API {
                 $bolt_pattern = $vehicle_data['technical']['bolt_pattern'];
             }
 
-            // Kerekek feldolgozása
+            // Kerekek feldolgozása és csoportosítása
             if (isset($vehicle_data['wheels']) && is_array($vehicle_data['wheels'])) {
                 foreach ($vehicle_data['wheels'] as $wheel_set) {
+                    $front_info = null;
+                    $rear_info = null;
+
                     if (isset($wheel_set['front'])) {
                         $front = $wheel_set['front'];
-                        $rim_info = $this->parse_rim_info($front['rim']);
-                        $wheels[] = array(
-                            'make' => $make,
-                            'model' => $model,
-                            'position' => 'Első',
-                            'size' => $rim_info['diameter'],
-                            'width' => $rim_info['width'],
-                            'offset' => $rim_info['offset'],
-                            'bolt_pattern' => $bolt_pattern,
-                            'tire_size' => $front['tire']
-                        );
+                        $front_info = $this->parse_rim_info($front['rim']);
+                        $front_info['tire_size'] = $front['tire'];
                     }
 
                     if (isset($wheel_set['rear'])) {
                         $rear = $wheel_set['rear'];
-                        $rim_info = $this->parse_rim_info($rear['rim']);
-                        $wheels[] = array(
-                            'make' => $make,
-                            'model' => $model,
-                            'position' => 'Hátsó',
-                            'size' => $rim_info['diameter'],
-                            'width' => $rim_info['width'],
-                            'offset' => $rim_info['offset'],
-                            'bolt_pattern' => $bolt_pattern,
-                            'tire_size' => $rear['tire']
-                        );
+                        $rear_info = $this->parse_rim_info($rear['rim']);
+                        $rear_info['tire_size'] = $rear['tire'];
                     }
+
+                    // Kulcs generálása a felni szetthez
+                    $key = '';
+                    if ($front_info) {
+                        $key .= $front_info['diameter'] . '_' . $front_info['width'] . '_' . $front_info['offset'];
+                    }
+                    if ($rear_info && $rear_info !== $front_info) {
+                        $key .= '_' . $rear_info['diameter'] . '_' . $rear_info['width'] . '_' . $rear_info['offset'];
+                    }
+
+                    if (!isset($wheel_sets[$key])) {
+                        $wheel_set_data = array(
+                            'make' => $make,
+                            'model' => $model
+                        );
+
+                        if ($front_info) {
+                            $wheel_set_data['front'] = array(
+                                'position' => 'Első',
+                                'size' => $front_info['diameter'],
+                                'width' => $front_info['width'],
+                                'offset' => $front_info['offset'],
+                                'bolt_pattern' => $bolt_pattern,
+                                'tire_size' => $front_info['tire_size']
+                            );
+                        }
+
+                        if ($rear_info && $rear_info !== $front_info) {
+                            $wheel_set_data['rear'] = array(
+                                'position' => 'Hátsó',
+                                'size' => $rear_info['diameter'],
+                                'width' => $rear_info['width'],
+                                'offset' => $rear_info['offset'],
+                                'bolt_pattern' => $bolt_pattern,
+                                'tire_size' => $rear_info['tire_size']
+                            );
+                        }
+
+                        $wheel_sets[$key] = $wheel_set_data;
+                    }
+                }
+            }
+
+            // Átalakítjuk a wheel_sets asszociatív tömböt egyszerű tömbbé
+            $wheels = array();
+            foreach ($wheel_sets as $wheel_set) {
+                if (isset($wheel_set['front'])) {
+                    $wheels[] = $wheel_set['front'];
+                }
+                if (isset($wheel_set['rear'])) {
+                    $wheels[] = $wheel_set['rear'];
                 }
             }
 
