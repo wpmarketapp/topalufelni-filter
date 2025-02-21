@@ -254,6 +254,35 @@ jQuery(document).ready(function($) {
             const bolt_pattern = wheel.bolt_pattern ? `<p><strong>Csavarok:</strong> ${wheel.bolt_pattern}</p>` : '';
             const tire_size = wheel.tire_size ? `<p><strong>Gumiméret:</strong> ${wheel.tire_size}</p>` : '';
 
+            // Termékek megjelenítése
+            let productsHtml = '';
+            if (wheel.matching_products && wheel.matching_products.length > 0) {
+                productsHtml = `
+                    <div class="taf-matching-products">
+                        <h4>Elérhető felnik:</h4>
+                        <div class="taf-product-grid">
+                            ${wheel.matching_products.map(product => `
+                                <div class="taf-product-card">
+                                    ${product.image_url ? `<img src="${product.image_url}" alt="${product.name}">` : ''}
+                                    <h5>${product.name}</h5>
+                                    <p class="taf-product-price">
+                                        ${product.sale_price ? 
+                                            `<span class="taf-sale-price">${product.sale_price} Ft</span>
+                                             <span class="taf-regular-price">${product.regular_price} Ft</span>` : 
+                                            `<span class="taf-price">${product.price} Ft</span>`
+                                        }
+                                    </p>
+                                    <p class="taf-stock">Készleten: ${product.stock_quantity} db</p>
+                                    <a href="${product.permalink}" class="taf-product-link" target="_blank">Részletek</a>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            } else {
+                productsHtml = '<p class="taf-no-products">Nincs készleten megfelelő felni</p>';
+            }
+
             const wheelCard = `
                 <div class="taf-result-card">
                     <h3>${$makeSelect.find('option:selected').text()} ${$modelSelect.find('option:selected').text()}</h3>
@@ -263,6 +292,7 @@ jQuery(document).ready(function($) {
                     ${offset}
                     ${bolt_pattern}
                     ${tire_size}
+                    ${productsHtml}
                 </div>
             `;
             $results.append(wheelCard);

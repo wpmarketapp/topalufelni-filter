@@ -148,6 +148,62 @@ class TAF_API {
     }
 
     /**
+     * WooCommerce termékek keresése felni adatok alapján
+     */
+    private function find_matching_products($wheel_data) {
+        // Ellenőrizzük, hogy a WooCommerce aktív-e
+        if (!class_exists('WooCommerce')) {
+            return null;
+        }
+
+        $args = array(
+            'post_type' => 'product',
+            'post_status' => 'publish',
+            'posts_per_page' => -1,
+            'tax_query' => array(
+                'relation' => 'AND',
+                array(
+                    'taxonomy' => 'pa_atmero',
+                    'field' => 'name',
+                    'terms' => $wheel_data['size']
+                )
+            )
+        );
+
+        // Ha van bolt_pattern, azt is nézzük
+        if (!empty($wheel_data['bolt_pattern'])) {
+            $args['tax_query'][] = array(
+                'taxonomy' => 'pa_osztokor',
+                'field' => 'name',
+                'terms' => str_replace('x', '', $wheel_data['bolt_pattern'])
+            );
+        }
+
+        $products = wc_get_products($args);
+        
+        if (!empty($products)) {
+            $matching_products = array();
+            foreach ($products as $product) {
+                if ($product->is_in_stock()) {
+                    $matching_products[] = array(
+                        'id' => $product->get_id(),
+                        'name' => $product->get_name(),
+                        'price' => $product->get_price(),
+                        'regular_price' => $product->get_regular_price(),
+                        'sale_price' => $product->get_sale_price(),
+                        'stock_quantity' => $product->get_stock_quantity(),
+                        'permalink' => $product->get_permalink(),
+                        'image_url' => wp_get_attachment_image_url($product->get_image_id(), 'medium')
+                    );
+                }
+            }
+            return $matching_products;
+        }
+
+        return null;
+    }
+
+    /**
      * Felni adatok lekérése
      */
     public function get_wheel_specs($make, $model, $year) {
@@ -210,9 +266,23 @@ class TAF_API {
                     $key = '';
                     if ($front_info) {
                         $key .= $front_info['diameter'] . '_' . $front_info['width'] . '_' . $front_info['offset'];
+                        // Keressük a megfelelő termékeket
+                        $front_info['matching_products'] = $this->find_matching_products(array(
+                            'size' => $front_info['diameter'],
+                            'width' => $front_info['width'],
+                            'offset' => $front_info['offset'],
+                            'bolt_pattern' => $bolt_pattern
+                        ));
                     }
                     if ($rear_info && $rear_info !== $front_info) {
                         $key .= '_' . $rear_info['diameter'] . '_' . $rear_info['width'] . '_' . $rear_info['offset'];
+                        // Keressük a megfelelő termékeket
+                        $rear_info['matching_products'] = $this->find_matching_products(array(
+                            'size' => $rear_info['diameter'],
+                            'width' => $rear_info['width'],
+                            'offset' => $rear_info['offset'],
+                            'bolt_pattern' => $bolt_pattern
+                        ));
                     }
 
                     if (!isset($wheel_sets[$key])) {
@@ -228,7 +298,8 @@ class TAF_API {
                                 'width' => $front_info['width'],
                                 'offset' => $front_info['offset'],
                                 'bolt_pattern' => $bolt_pattern,
-                                'tire_size' => $front_info['tire_size']
+                                'tire_size' => $front_info['tire_size'],
+                                'matching_products' => $front_info['matching_products']
                             );
                         }
 
@@ -239,7 +310,8 @@ class TAF_API {
                                 'width' => $rear_info['width'],
                                 'offset' => $rear_info['offset'],
                                 'bolt_pattern' => $bolt_pattern,
-                                'tire_size' => $rear_info['tire_size']
+                                'tire_size' => $rear_info['tire_size'],
+                                'matching_products' => $rear_info['matching_products']
                             );
                         }
 
