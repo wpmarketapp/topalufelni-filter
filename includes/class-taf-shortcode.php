@@ -207,14 +207,8 @@ class TAF_Shortcode {
             'post_type' => 'product',
             'post_status' => 'publish',
             'posts_per_page' => -1,
-            'tax_query' => array(
-                'relation' => 'AND',
-                array(
-                    'taxonomy' => 'product_cat',
-                    'field' => 'slug',
-                    'terms' => 'felni'
-                )
-            )
+            'orderby' => 'title',
+            'order' => 'ASC'
         );
 
         $products = wc_get_products($args);
@@ -222,13 +216,19 @@ class TAF_Shortcode {
         if (!empty($products)) {
             $all_wheels = array();
             foreach ($products as $product) {
+                // Csak akkor adjuk hozzá, ha van készleten
                 if ($product->is_in_stock()) {
+                    // Árak formázása
+                    $regular_price = $product->get_regular_price();
+                    $sale_price = $product->get_sale_price();
+                    $price = $product->get_price();
+
                     $all_wheels[] = array(
                         'id' => $product->get_id(),
                         'name' => $product->get_name(),
-                        'price' => $product->get_price(),
-                        'regular_price' => $product->get_regular_price(),
-                        'sale_price' => $product->get_sale_price(),
+                        'price' => number_format($price, 0, ',', ' '),
+                        'regular_price' => $regular_price ? number_format($regular_price, 0, ',', ' ') : '',
+                        'sale_price' => $sale_price ? number_format($sale_price, 0, ',', ' ') : '',
                         'stock_quantity' => $product->get_stock_quantity(),
                         'permalink' => $product->get_permalink(),
                         'image_url' => wp_get_attachment_image_url($product->get_image_id(), 'medium'),
@@ -237,6 +237,8 @@ class TAF_Shortcode {
                     );
                 }
             }
+
+            error_log('TAF All Wheels Found: ' . count($all_wheels));
             wp_send_json_success($all_wheels);
         } else {
             wp_send_json_error(array(
