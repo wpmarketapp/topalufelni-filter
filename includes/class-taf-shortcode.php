@@ -65,7 +65,6 @@ class TAF_Shortcode {
                 </form>
 
                 <div class="taf-error"></div>
-                <div class="taf-loading">Betöltés...</div>
                 <div class="taf-results"></div>
             </div>
             <?php

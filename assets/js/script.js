@@ -7,9 +7,18 @@ jQuery(document).ready(function($) {
     const $makeSelect = $('#taf-make');
     const $modelSelect = $('#taf-model');
     const $yearSelect = $('#taf-year');
-    const $loading = $('.taf-loading');
     const $error = $('.taf-error');
     const $results = $('.taf-results');
+    const $searchButton = $('#taf-search-form button[type="submit"]');
+
+    // Betöltési állapot kezelése
+    function setLoading(isLoading) {
+        if (isLoading) {
+            $searchButton.prop('disabled', true).text('Betöltés...');
+        } else {
+            $searchButton.prop('disabled', false).text('Keresés');
+        }
+    }
 
     // Session adatok visszatöltése
     function restoreSessionData() {
@@ -58,7 +67,7 @@ jQuery(document).ready(function($) {
 
     // Gyártók betöltése
     function loadMakes() {
-        $loading.show();
+        setLoading(true);
         $error.hide();
         $makeSelect.prop('disabled', true);
 
@@ -90,7 +99,7 @@ jQuery(document).ready(function($) {
                     reject(errorThrown);
                 },
                 complete: function() {
-                    $loading.hide();
+                    setLoading(false);
                 }
             });
         });
@@ -98,7 +107,7 @@ jQuery(document).ready(function($) {
 
     // Modellek betöltése
     function loadModels(make) {
-        $loading.show();
+        setLoading(true);
         $error.hide();
         $modelSelect.empty().append('<option value="">Válassz modellt...</option>').prop('disabled', true);
         $yearSelect.empty().append('<option value="">Válassz évet...</option>').prop('disabled', true);
@@ -132,7 +141,7 @@ jQuery(document).ready(function($) {
                     reject(errorThrown);
                 },
                 complete: function() {
-                    $loading.hide();
+                    setLoading(false);
                 }
             });
         });
@@ -140,7 +149,7 @@ jQuery(document).ready(function($) {
 
     // Évek betöltése
     function loadYears(make, model) {
-        $loading.show();
+        setLoading(true);
         $error.hide();
         $yearSelect.empty().append('<option value="">Válassz évet...</option>').prop('disabled', true);
 
@@ -174,7 +183,7 @@ jQuery(document).ready(function($) {
                     reject(errorThrown);
                 },
                 complete: function() {
-                    $loading.hide();
+                    setLoading(false);
                 }
             });
         });
@@ -228,50 +237,25 @@ jQuery(document).ready(function($) {
         $error.text(message).show();
     }
 
-    // Event listeners
-    $makeSelect.on('change', function() {
-        const selectedMake = $(this).val();
-        if (selectedMake) {
-            loadModels(selectedMake).then(() => saveSessionData());
-        } else {
-            $modelSelect.empty().append('<option value="">Válassz modellt...</option>').prop('disabled', true);
-            $yearSelect.empty().append('<option value="">Válassz évet...</option>').prop('disabled', true);
-            saveSessionData();
-        }
-    });
-
-    $modelSelect.on('change', function() {
-        const selectedMake = $makeSelect.val();
-        const selectedModel = $(this).val();
-        if (selectedMake && selectedModel) {
-            loadYears(selectedMake, selectedModel).then(() => saveSessionData());
-        } else {
-            $yearSelect.empty().append('<option value="">Válassz évet...</option>').prop('disabled', true);
-            saveSessionData();
-        }
-    });
-
-    $yearSelect.on('change', function() {
-        saveSessionData();
-    });
-
     // Keresés indítása
-    $('#taf-search-form').on('submit', function(e) {
-        e.preventDefault();
-        const make = $makeSelect.val();
-        const model = $modelSelect.val();
-        const year = $yearSelect.val();
+    function initSearch() {
+        $('#taf-search-form').off('submit').on('submit', function(e) {
+            e.preventDefault();
+            const make = $makeSelect.val();
+            const model = $modelSelect.val();
+            const year = $yearSelect.val();
 
-        if (!make || !model || !year) {
-            showError('Kérlek válassz ki minden mezőt!');
-            return;
-        }
+            if (!make || !model || !year) {
+                showError('Kérlek válassz ki minden mezőt!');
+                return;
+            }
 
-        searchWheels(make, model, year);
-    });
+            searchWheels(make, model, year);
+        });
+    }
 
     function searchWheels(make, model, year) {
-        $loading.show();
+        setLoading(true);
         $error.hide();
         $results.empty();
 
@@ -321,13 +305,16 @@ jQuery(document).ready(function($) {
                     
                     $results.html(message);
                 }
+                
+                initSearch();
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 console.error('Wheels error:', textStatus, errorThrown);
                 showError('Hiba történt a szerverrel való kommunikáció során.');
+                initSearch();
             },
             complete: function() {
-                $loading.hide();
+                setLoading(false);
             }
         });
     }
@@ -425,7 +412,7 @@ jQuery(document).ready(function($) {
     });
 
     function getAllWheels() {
-        $loading.show();
+        setLoading(true);
         $error.hide();
         $results.empty();
 
@@ -452,7 +439,7 @@ jQuery(document).ready(function($) {
                 showError('Hiba történt a szerverrel való kommunikáció során.');
             },
             complete: function() {
-                $loading.hide();
+                setLoading(false);
             }
         });
     }
@@ -494,6 +481,43 @@ jQuery(document).ready(function($) {
         $results.html(resultsHtml);
     }
 
+    // Event listeners
+    $makeSelect.on('change', function() {
+        const selectedMake = $(this).val();
+        if (selectedMake) {
+            loadModels(selectedMake).then(() => {
+                saveSessionData();
+                initSearch();
+            });
+        } else {
+            $modelSelect.empty().append('<option value="">Válassz modellt...</option>').prop('disabled', true);
+            $yearSelect.empty().append('<option value="">Válassz évet...</option>').prop('disabled', true);
+            saveSessionData();
+            initSearch();
+        }
+    });
+
+    $modelSelect.on('change', function() {
+        const selectedMake = $makeSelect.val();
+        const selectedModel = $(this).val();
+        if (selectedMake && selectedModel) {
+            loadYears(selectedMake, selectedModel).then(() => {
+                saveSessionData();
+                initSearch();
+            });
+        } else {
+            $yearSelect.empty().append('<option value="">Válassz évet...</option>').prop('disabled', true);
+            saveSessionData();
+            initSearch();
+        }
+    });
+
+    $yearSelect.on('change', function() {
+        saveSessionData();
+        initSearch();
+    });
+
     // Inicializálás - most a sessionStorage-ből töltjük vissza az adatokat
     restoreSessionData();
+    initSearch();
 }); 
