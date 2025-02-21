@@ -315,4 +315,44 @@
             padding-left: 10px;
         }
     }
+}
+
+.taf-debug-info {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+    font-size: 14px;
+}
+
+.taf-debug-info h4 {
+    color: #333;
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.taf-debug-section {
+    margin-bottom: 15px;
+    padding: 15px;
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.taf-debug-section h5 {
+    color: #666;
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.taf-debug-section p {
+    margin: 5px 0;
+    color: #333;
+}
+
+.taf-debug-section p:last-child {
+    margin-bottom: 0;
 } 

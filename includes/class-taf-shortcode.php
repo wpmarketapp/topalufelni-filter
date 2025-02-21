@@ -148,6 +148,10 @@ class TAF_Shortcode {
     public function ajax_search_wheels() {
         check_ajax_referer('taf-ajax-nonce', 'nonce');
         
+        // Ellenőrizzük a developer módot
+        $settings = get_option('taf_plugin_settings', array('dev_mode' => false));
+        $is_dev_mode = isset($settings['dev_mode']) && $settings['dev_mode'];
+        
         $make = sanitize_text_field($_POST['make']);
         $model = sanitize_text_field($_POST['model']);
         $year = intval($_POST['year']);
@@ -159,24 +163,159 @@ class TAF_Shortcode {
             ));
             return;
         }
-        
-        $wheels = $this->api->get_wheel_specs($make, $model, $year);
-        
-        if (is_array($wheels)) {
-            if (empty($wheels)) {
-                wp_send_json_error(array(
-                    'message' => 'Nem található felni a megadott paraméterekkel.',
-                    'code' => 'no_results'
-                ));
-            } else {
-                wp_send_json_success($wheels);
-            }
-        } else {
-            error_log('TAF Error: Nem sikerült betölteni a felni adatokat');
+
+        // Ellenőrizzük, hogy a WooCommerce aktív-e
+        if (!class_exists('WooCommerce')) {
+            error_log('TAF Error: WooCommerce nincs aktiválva');
             wp_send_json_error(array(
-                'message' => 'Nem sikerült betölteni a felni adatokat.',
-                'code' => 'wheels_error'
+                'message' => 'WooCommerce nincs aktiválva.',
+                'code' => 'woocommerce_inactive'
             ));
+            return;
+        }
+
+        // Lekérjük a felni specifikációkat
+        $wheel_specs = $this->api->get_wheel_specs($make, $model, $year);
+
+        if (!is_array($wheel_specs) || empty($wheel_specs)) {
+            wp_send_json_error(array(
+                'message' => 'Nem található felni a megadott paraméterekkel.',
+                'code' => 'no_results'
+            ));
+            return;
+        }
+
+        // Összegyűjtjük a méreteket és osztóköröket
+        $sizes = array();
+        $bolt_patterns = array();
+        foreach ($wheel_specs as $spec) {
+            if (!empty($spec['size'])) {
+                $sizes[] = sanitize_title($spec['size']);
+            }
+            if (!empty($spec['bolt_pattern'])) {
+                $bolt_patterns[] = sanitize_title(str_replace('x', '-', $spec['bolt_pattern']));
+            }
+        }
+
+        // Lekérjük az összes elérhető felni méretet és osztókört
+        $available_sizes = array();
+        $available_bolt_patterns = array();
+        $terms_size = get_terms(array(
+            'taxonomy' => 'pa_atmero',
+            'hide_empty' => true
+        ));
+        $terms_bolt = get_terms(array(
+            'taxonomy' => 'pa_osztokor',
+            'hide_empty' => true
+        ));
+        
+        if (!is_wp_error($terms_size)) {
+            foreach ($terms_size as $term) {
+                $available_sizes[] = $term->name;
+            }
+        }
+        if (!is_wp_error($terms_bolt)) {
+            foreach ($terms_bolt as $term) {
+                $available_bolt_patterns[] = $term->name;
+            }
+        }
+
+        // Lekérjük a termékeket
+        $args = array(
+            'post_type' => 'product',
+            'post_status' => 'publish',
+            'posts_per_page' => 10,
+            'orderby' => 'title',
+            'order' => 'ASC',
+            'tax_query' => array(
+                'relation' => 'AND'
+            )
+        );
+
+        // Méret szűrő hozzáadása
+        if (!empty($sizes)) {
+            $args['tax_query'][] = array(
+                'taxonomy' => 'pa_atmero',
+                'field' => 'slug',
+                'terms' => $sizes,
+                'operator' => 'IN'
+            );
+        }
+
+        // Osztókör szűrő hozzáadása
+        if (!empty($bolt_patterns)) {
+            $args['tax_query'][] = array(
+                'taxonomy' => 'pa_osztokor',
+                'field' => 'slug',
+                'terms' => $bolt_patterns,
+                'operator' => 'IN'
+            );
+        }
+
+        $query = new WP_Query($args);
+        $matching_wheels = array();
+
+        if ($query->have_posts()) {
+            $product_ids = wp_list_pluck($query->posts, 'ID');
+            $products = array_map('wc_get_product', $product_ids);
+            $products = array_filter($products);
+
+            foreach ($products as $product) {
+                if ($product->is_in_stock()) {
+                    $regular_price = $product->get_regular_price();
+                    $sale_price = $product->get_sale_price();
+                    $price = $product->get_price();
+
+                    $matching_wheels[] = array(
+                        'id' => $product->get_id(),
+                        'name' => $product->get_name(),
+                        'price' => number_format($price, 0, ',', ' '),
+                        'regular_price' => $regular_price ? number_format($regular_price, 0, ',', ' ') : '',
+                        'sale_price' => $sale_price ? number_format($sale_price, 0, ',', ' ') : '',
+                        'stock_quantity' => $product->get_stock_quantity(),
+                        'stock_status' => $product->get_stock_status(),
+                        'permalink' => $product->get_permalink(),
+                        'image_url' => wp_get_attachment_image_url($product->get_image_id(), 'medium'),
+                        'size' => $product->get_attribute('pa_atmero'),
+                        'bolt_pattern' => $product->get_attribute('pa_osztokor')
+                    );
+
+                    if (count($matching_wheels) >= 10) {
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (!empty($matching_wheels)) {
+            wp_send_json_success($matching_wheels);
+        } else {
+            // Developer módban részletes információkat küldünk
+            if ($is_dev_mode) {
+                $debug_info = array(
+                    'message' => 'Nem található elérhető felni a megadott paraméterekkel.',
+                    'code' => 'no_matching_wheels',
+                    'debug' => array(
+                        'car_specs' => array(
+                            'make' => $make,
+                            'model' => $model,
+                            'year' => $year,
+                            'required_sizes' => array_unique($sizes),
+                            'required_bolt_patterns' => array_unique($bolt_patterns)
+                        ),
+                        'available_products' => array(
+                            'sizes' => array_unique($available_sizes),
+                            'bolt_patterns' => array_unique($available_bolt_patterns)
+                        )
+                    )
+                );
+                wp_send_json_error($debug_info);
+            } else {
+                wp_send_json_error(array(
+                    'message' => 'Nem található elérhető felni a megadott paraméterekkel.',
+                    'code' => 'no_matching_wheels'
+                ));
+            }
         }
     }
 

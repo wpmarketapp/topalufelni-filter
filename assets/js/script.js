@@ -242,7 +242,45 @@ jQuery(document).ready(function($) {
 
     function displayResults(wheels) {
         if (!wheels.length) {
-            $results.html('<p>Nem található felni a megadott paraméterekkel.</p>');
+            let errorMessage = 'Nem található elérhető felni a megadott paraméterekkel.';
+            
+            // Ha van debug információ, megjelenítem
+            if (response.data && response.data.debug) {
+                const debug = response.data.debug;
+                errorMessage += '<div class="taf-debug-info">';
+                errorMessage += '<h4>Debug Információk:</h4>';
+                
+                // Autó specifikációk
+                errorMessage += '<div class="taf-debug-section">';
+                errorMessage += '<h5>Autó Specifikációk:</h5>';
+                errorMessage += `<p>Gyártó: ${debug.car_specs.make}</p>`;
+                errorMessage += `<p>Modell: ${debug.car_specs.model}</p>`;
+                errorMessage += `<p>Év: ${debug.car_specs.year}</p>`;
+                
+                // Szükséges méretek
+                if (debug.car_specs.required_sizes.length > 0) {
+                    errorMessage += '<p>Szükséges felni méretek: ' + debug.car_specs.required_sizes.join(', ') + '</p>';
+                }
+                if (debug.car_specs.required_bolt_patterns.length > 0) {
+                    errorMessage += '<p>Szükséges osztókörök: ' + debug.car_specs.required_bolt_patterns.join(', ') + '</p>';
+                }
+                errorMessage += '</div>';
+                
+                // Elérhető termékek
+                errorMessage += '<div class="taf-debug-section">';
+                errorMessage += '<h5>Elérhető Termékek:</h5>';
+                if (debug.available_products.sizes.length > 0) {
+                    errorMessage += '<p>Elérhető felni méretek: ' + debug.available_products.sizes.join(', ') + '</p>';
+                }
+                if (debug.available_products.bolt_patterns.length > 0) {
+                    errorMessage += '<p>Elérhető osztókörök: ' + debug.available_products.bolt_patterns.join(', ') + '</p>';
+                }
+                errorMessage += '</div>';
+                
+                errorMessage += '</div>';
+            }
+            
+            $results.html(errorMessage);
             return;
         }
 
@@ -287,9 +325,6 @@ jQuery(document).ready(function($) {
         } else {
             $results.html(resultsHtml);
         }
-
-        // Debug log
-        console.log('Processed wheels data:', wheels);
     }
 
     // Minden felni gomb kezelése
