@@ -91,27 +91,60 @@ class TAF_API {
      * Évek lekérése
      */
     public function get_years($make, $model) {
-        $response = $this->make_request('/years/', array(
+        $response = $this->make_request('/generations/', array(
             'make' => $make,
             'model' => $model
         ));
+        
+        error_log('TAF Years Raw Response: ' . print_r($response, true));
+        
         if ($response && isset($response['data'])) {
-            // Évek kinyerése és rendezése
             $years = array();
-            foreach ($response['data'] as $yearData) {
-                if (isset($yearData['end_year']) && $yearData['end_year'] > 0) {
-                    $years[] = $yearData['end_year'];
-                }
-                if (isset($yearData['start_year']) && $yearData['start_year'] > 0) {
-                    $years[] = $yearData['start_year'];
+            foreach ($response['data'] as $generation) {
+                // Debug log
+                error_log('TAF Generation Data: ' . print_r($generation, true));
+                
+                if (isset($generation['years'])) {
+                    foreach ($generation['years'] as $year) {
+                        $yearValue = intval($year);
+                        if ($yearValue > 0) {
+                            $years[] = $yearValue;
+                        }
+                    }
                 }
             }
+            
             // Duplikációk eltávolítása és rendezés
             $years = array_unique($years);
             rsort($years);
-            return $years;
+            
+            error_log('TAF Processed Years: ' . print_r($years, true));
+            
+            if (empty($years)) {
+                // Ha nincsenek évek a generációkban, próbáljuk meg a modifications endpointot
+                $mod_response = $this->make_request('/modifications/', array(
+                    'make' => $make,
+                    'model' => $model
+                ));
+                
+                if ($mod_response && isset($mod_response['data'])) {
+                    foreach ($mod_response['data'] as $mod) {
+                        if (isset($mod['year'])) {
+                            $yearValue = intval($mod['year']);
+                            if ($yearValue > 0) {
+                                $years[] = $yearValue;
+                            }
+                        }
+                    }
+                    
+                    $years = array_unique($years);
+                    rsort($years);
+                }
+            }
+            
+            return !empty($years) ? $years : array();
         }
-        return false;
+        return array();
     }
 
     /**
