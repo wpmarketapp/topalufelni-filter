@@ -156,9 +156,24 @@ class TAF_API {
             return null;
         }
 
-        // Debug log
-        error_log('TAF Wheel Data for Product Search: ' . print_r($wheel_data, true));
+        // Méret formázása a termék attribútum formátumához
+        $size = '';
+        if (!empty($wheel_data['size'])) {
+            // Eltávolítjuk az esetleges szóközöket és a " karaktert
+            $size = trim(str_replace('"', '', $wheel_data['size']));
+        }
 
+        // Osztókör formázása a termék attribútum formátumához
+        $bolt_pattern = '';
+        if (!empty($wheel_data['bolt_pattern'])) {
+            // Pl.: "5x112" -> "5-112"
+            $bolt_pattern = str_replace('x', '-', $wheel_data['bolt_pattern']);
+            $bolt_pattern = sanitize_title($bolt_pattern);
+        }
+
+        error_log('TAF Debug - Keresési paraméterek: Méret=' . $size . ', Osztókör=' . $bolt_pattern);
+
+        // Lekérdezés összeállítása
         $args = array(
             'post_type' => 'product',
             'post_status' => 'publish',
@@ -168,49 +183,49 @@ class TAF_API {
             )
         );
 
-        // Átmérő szűrése
-        if (!empty($wheel_data['size'])) {
+        // Méret szűrése
+        if (!empty($size)) {
             $args['tax_query'][] = array(
                 'taxonomy' => 'pa_atmero',
                 'field' => 'slug',
-                'terms' => sanitize_title($wheel_data['size'])
+                'terms' => sanitize_title($size)
             );
-            error_log('TAF Searching for diameter: ' . $wheel_data['size']);
         }
 
         // Osztókör szűrése
-        if (!empty($wheel_data['bolt_pattern'])) {
-            // Formázás: pl. "5x112" -> "5-112"
-            $bolt_pattern = str_replace('x', '-', $wheel_data['bolt_pattern']);
+        if (!empty($bolt_pattern)) {
             $args['tax_query'][] = array(
                 'taxonomy' => 'pa_osztokor',
                 'field' => 'slug',
-                'terms' => sanitize_title($bolt_pattern)
+                'terms' => $bolt_pattern
             );
-            error_log('TAF Searching for bolt pattern: ' . $bolt_pattern);
         }
 
         // Termékek lekérése
         $products = wc_get_products($args);
-        error_log('TAF Found products: ' . count($products));
 
         if (!empty($products)) {
             $matching_products = array();
             foreach ($products as $product) {
                 if ($product->is_in_stock()) {
+                    $regular_price = $product->get_regular_price();
+                    $sale_price = $product->get_sale_price();
+                    $price = $product->get_price();
+
                     $matching_products[] = array(
                         'id' => $product->get_id(),
                         'name' => $product->get_name(),
-                        'price' => $product->get_price(),
-                        'regular_price' => $product->get_regular_price(),
-                        'sale_price' => $product->get_sale_price(),
+                        'price' => number_format($price, 0, ',', ' '),
+                        'regular_price' => $regular_price ? number_format($regular_price, 0, ',', ' ') : '',
+                        'sale_price' => $sale_price ? number_format($sale_price, 0, ',', ' ') : '',
                         'stock_quantity' => $product->get_stock_quantity(),
                         'permalink' => $product->get_permalink(),
-                        'image_url' => wp_get_attachment_image_url($product->get_image_id(), 'medium')
+                        'image_url' => wp_get_attachment_image_url($product->get_image_id(), 'medium'),
+                        'size' => $product->get_attribute('pa_atmero'),
+                        'bolt_pattern' => $product->get_attribute('pa_osztokor')
                     );
                 }
             }
-            error_log('TAF Matching products: ' . count($matching_products));
             return $matching_products;
         }
 

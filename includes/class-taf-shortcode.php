@@ -59,7 +59,7 @@ class TAF_Shortcode {
 
                 <button type="submit" class="taf-button">Keresés</button>
                 <?php if ($is_dev_mode): ?>
-                <button type="button" id="taf-all-wheels" class="taf-button taf-button-secondary">Minden felni</button>
+                <button type="button" id="taf-all-wheels" class="taf-button taf-button-secondary">Developer Test</button>
                 <?php endif; ?>
             </form>
 
