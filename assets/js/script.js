@@ -221,23 +221,34 @@ jQuery(document).ready(function($) {
             },
             success: function(response) {
                 console.log('Wheels response:', response);
-                // Mentjük a response-t egy globális változóba
-                window.lastResponse = response;
                 
                 if (response.success && Array.isArray(response.data)) {
                     displayResults(response.data);
                 } else {
-                    // Ha van debug információ, azt is megjelenítjük
                     let message = response.data && response.data.message 
                         ? response.data.message 
                         : 'Hiba történt a keresés során.';
 
+                    // Debug információk megjelenítése
                     if (response.data && response.data.debug) {
-                        message += '<div class="taf-debug-info">';
-                        message += '<div style="border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; padding: 10px 0; margin: 10px 0; text-align: center; color: #000;">';
-                        message += '<p style="color: #000;"><strong>API által kapott felni méret:</strong> ' + response.data.debug.api_sizes + '</p>';
-                        message += '<p style="color: #000;"><strong>Elérhető termékek méretei:</strong> ' + response.data.debug.available_sizes + '</p>';
-                        message += '</div>';
+                        const debug = response.data.debug;
+                        message += '<div class="taf-debug-info" style="background: #fff; padding: 20px; margin-top: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">';
+                        message += '<h4 style="color: #000; margin-bottom: 15px;">Debug Információk:</h4>';
+                        
+                        if (debug.api_sizes) {
+                            message += '<div style="margin-bottom: 10px;">';
+                            message += '<p style="color: #000; margin: 5px 0;"><strong>API által kapott felni méret:</strong></p>';
+                            message += '<p style="color: #000; background: #f8f9fa; padding: 10px; border-radius: 4px;">' + debug.api_sizes + '</p>';
+                            message += '</div>';
+                        }
+                        
+                        if (debug.available_sizes) {
+                            message += '<div style="margin-bottom: 10px;">';
+                            message += '<p style="color: #000; margin: 5px 0;"><strong>Elérhető termékek méretei:</strong></p>';
+                            message += '<p style="color: #000; background: #f8f9fa; padding: 10px; border-radius: 4px;">' + debug.available_sizes + '</p>';
+                            message += '</div>';
+                        }
+                        
                         message += '</div>';
                     }
                     

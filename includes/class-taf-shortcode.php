@@ -155,10 +155,6 @@ class TAF_Shortcode {
     public function ajax_search_wheels() {
         check_ajax_referer('taf-ajax-nonce', 'nonce');
         
-        // Ellenőrizzük a developer módot
-        $settings = get_option('taf_plugin_settings', array('dev_mode' => false));
-        $is_dev_mode = isset($settings['dev_mode']) && $settings['dev_mode'];
-        
         $make = sanitize_text_field($_POST['make']);
         $model = sanitize_text_field($_POST['model']);
         $year = intval($_POST['year']);
@@ -176,59 +172,44 @@ class TAF_Shortcode {
 
         // Ha hiba történt vagy nincs adat
         if (isset($response['error']) || empty($response['wheel_sets'])) {
-            if ($is_dev_mode) {
-                wp_send_json_error(array(
-                    'message' => isset($response['message']) ? $response['message'] : 'Nem található felni a megadott paraméterekkel.',
-                    'code' => 'no_results',
-                    'debug' => array(
-                        'api_response' => $response['api_response']
-                    )
-                ));
-            } else {
-                wp_send_json_error(array(
-                    'message' => 'Nem található felni a megadott paraméterekkel.',
-                    'code' => 'no_results'
-                ));
-            }
+            wp_send_json_error(array(
+                'message' => 'Nem található felni a megadott paraméterekkel.',
+                'code' => 'no_results'
+            ));
             return;
         }
 
-        // Összegyűjtjük a méreteket
-        $api_sizes = array();
+        // Csak a méreteket gyűjtjük ki
+        $needed_sizes = array();
         foreach ($response['wheel_sets'] as $set) {
             if (isset($set['front'])) {
-                // Eltávolítjuk a " karaktert a méretből
-                $api_sizes[] = str_replace('"', '', $set['front']['diameter']);
+                // Csak a számot tartjuk meg, minden mást eltávolítunk
+                $size = preg_replace('/[^0-9]/', '', $set['front']['diameter']);
+                if (!empty($size)) {
+                    $needed_sizes[] = $size;
+                }
             }
             if (isset($set['rear'])) {
-                // Eltávolítjuk a " karaktert a méretből
-                $api_sizes[] = str_replace('"', '', $set['rear']['diameter']);
+                // Csak a számot tartjuk meg, minden mást eltávolítunk
+                $size = preg_replace('/[^0-9]/', '', $set['rear']['diameter']);
+                if (!empty($size)) {
+                    $needed_sizes[] = $size;
+                }
             }
         }
-        $api_sizes = array_unique($api_sizes);
-        sort($api_sizes);
+        $needed_sizes = array_unique($needed_sizes);
+        sort($needed_sizes);
 
-        // Lekérjük az összes elérhető felni méretet
-        $available_sizes = array();
-        $terms_size = get_terms(array(
-            'taxonomy' => 'pa_atmero',
-            'hide_empty' => true
-        ));
-        
-        if (!is_wp_error($terms_size)) {
-            foreach ($terms_size as $term) {
-                // Eltávolítjuk a " karaktert a méretből, ha van
-                $available_sizes[] = str_replace('"', '', $term->name);
-            }
-            sort($available_sizes);
+        // Ha nincs méret, nincs mit keresni
+        if (empty($needed_sizes)) {
+            wp_send_json_error(array(
+                'message' => 'Nem található felni méret a megadott paraméterekkel.',
+                'code' => 'no_sizes'
+            ));
+            return;
         }
 
-        // Debug információk előkészítése
-        $debug_api_sizes = array_map(function($size) {
-            return $size . '"';
-        }, $api_sizes);
-
-        // Lekérjük a termékeket
+        // Lekérjük a termékeket a megfelelő méretekkel
         $args = array(
             'post_type' => 'product',
             'post_status' => 'publish',
@@ -236,19 +217,14 @@ class TAF_Shortcode {
             'orderby' => 'title',
             'order' => 'ASC',
             'tax_query' => array(
-                'relation' => 'AND'
+                array(
+                    'taxonomy' => 'pa_atmero',
+                    'field' => 'name',
+                    'terms' => $needed_sizes,
+                    'operator' => 'IN'
+                )
             )
         );
-
-        // Méret szűrő hozzáadása
-        if (!empty($api_sizes)) {
-            $args['tax_query'][] = array(
-                'taxonomy' => 'pa_atmero',
-                'field' => 'name',
-                'terms' => $api_sizes,
-                'operator' => 'IN'
-            );
-        }
 
         $query = new WP_Query($args);
         $matching_wheels = array();
@@ -260,26 +236,30 @@ class TAF_Shortcode {
 
             foreach ($products as $product) {
                 if ($product->is_in_stock()) {
-                    $regular_price = $product->get_regular_price();
-                    $sale_price = $product->get_sale_price();
-                    $price = $product->get_price();
+                    // Termék méretének ellenőrzése
+                    $product_size = preg_replace('/[^0-9]/', '', $product->get_attribute('pa_atmero'));
+                    
+                    // Csak akkor adjuk hozzá, ha a méret megegyezik valamelyik szükséges mérettel
+                    if (in_array($product_size, $needed_sizes)) {
+                        $regular_price = $product->get_regular_price();
+                        $sale_price = $product->get_sale_price();
+                        $price = $product->get_price();
 
-                    $matching_wheels[] = array(
-                        'id' => $product->get_id(),
-                        'name' => $product->get_name(),
-                        'price' => number_format($price, 0, ',', ' '),
-                        'regular_price' => $regular_price ? number_format($regular_price, 0, ',', ' ') : '',
-                        'sale_price' => $sale_price ? number_format($sale_price, 0, ',', ' ') : '',
-                        'stock_quantity' => $product->get_stock_quantity(),
-                        'stock_status' => $product->get_stock_status(),
-                        'permalink' => $product->get_permalink(),
-                        'image_url' => wp_get_attachment_image_url($product->get_image_id(), 'medium'),
-                        'size' => $product->get_attribute('pa_atmero'),
-                        'bolt_pattern' => $product->get_attribute('pa_osztokor')
-                    );
+                        $matching_wheels[] = array(
+                            'id' => $product->get_id(),
+                            'name' => $product->get_name(),
+                            'price' => number_format($price, 0, ',', ' '),
+                            'regular_price' => $regular_price ? number_format($regular_price, 0, ',', ' ') : '',
+                            'sale_price' => $sale_price ? number_format($sale_price, 0, ',', ' ') : '',
+                            'permalink' => $product->get_permalink(),
+                            'image_url' => wp_get_attachment_image_url($product->get_image_id(), 'medium'),
+                            'size' => $product_size,
+                            'bolt_pattern' => $product->get_attribute('pa_osztokor')
+                        );
 
-                    if (count($matching_wheels) >= 10) {
-                        break;
+                        if (count($matching_wheels) >= 10) {
+                            break;
+                        }
                     }
                 }
             }
@@ -288,23 +268,10 @@ class TAF_Shortcode {
         if (!empty($matching_wheels)) {
             wp_send_json_success($matching_wheels);
         } else {
-            // Developer módban részletes információkat küldünk
-            if ($is_dev_mode) {
-                $debug_info = array(
-                    'message' => 'Nem található elérhető felni a megadott paraméterekkel.',
-                    'code' => 'no_matching_wheels',
-                    'debug' => array(
-                        'api_sizes' => implode(' / ', $debug_api_sizes),
-                        'available_sizes' => implode(' / ', $available_sizes)
-                    )
-                );
-                wp_send_json_error($debug_info);
-            } else {
-                wp_send_json_error(array(
-                    'message' => 'Nem található elérhető felni a megadott paraméterekkel.',
-                    'code' => 'no_matching_wheels'
-                ));
-            }
+            wp_send_json_error(array(
+                'message' => 'Nem található elérhető felni a megadott paraméterekkel.',
+                'code' => 'no_matching_wheels'
+            ));
         }
     }
 
