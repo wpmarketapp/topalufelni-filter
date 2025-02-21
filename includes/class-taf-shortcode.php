@@ -82,10 +82,9 @@ class TAF_Shortcode {
         $makes = $this->api->get_makes();
         
         if ($makes !== false) {
-            error_log('TAF Makes Response: ' . print_r($makes, true));
             wp_send_json_success($makes);
         } else {
-            error_log('TAF Makes Error: Nem sikerült betölteni a gyártókat');
+            error_log('TAF Error: Nem sikerült betölteni a gyártókat');
             wp_send_json_error(array(
                 'message' => 'Nem sikerült betölteni a gyártókat.',
                 'code' => 'makes_error'
@@ -109,10 +108,9 @@ class TAF_Shortcode {
         $models = $this->api->get_models($make);
         
         if ($models !== false) {
-            error_log('TAF Models Response: ' . print_r($models, true));
             wp_send_json_success($models);
         } else {
-            error_log('TAF Models Error: Nem sikerült betölteni a modelleket');
+            error_log('TAF Error: Nem sikerült betölteni a modelleket');
             wp_send_json_error(array(
                 'message' => 'Nem sikerült betölteni a modelleket.',
                 'code' => 'models_error'
@@ -137,10 +135,9 @@ class TAF_Shortcode {
         $years = $this->api->get_years($make, $model);
         
         if ($years !== false) {
-            error_log('TAF Years Response: ' . print_r($years, true));
             wp_send_json_success($years);
         } else {
-            error_log('TAF Years Error: Nem sikerült betölteni az éveket');
+            error_log('TAF Error: Nem sikerült betölteni az éveket');
             wp_send_json_error(array(
                 'message' => 'Nem sikerült betölteni az éveket.',
                 'code' => 'years_error'
@@ -162,8 +159,6 @@ class TAF_Shortcode {
             ));
             return;
         }
-
-        error_log('TAF Search Params - Make: ' . $make . ', Model: ' . $model . ', Year: ' . $year);
         
         $wheels = $this->api->get_wheel_specs($make, $model, $year);
         
@@ -174,11 +169,10 @@ class TAF_Shortcode {
                     'code' => 'no_results'
                 ));
             } else {
-                error_log('TAF Wheels Found: ' . count($wheels));
                 wp_send_json_success($wheels);
             }
         } else {
-            error_log('TAF Wheels Error: Nem sikerült betölteni a felni adatokat');
+            error_log('TAF Error: Nem sikerült betölteni a felni adatokat');
             wp_send_json_error(array(
                 'message' => 'Nem sikerült betölteni a felni adatokat.',
                 'code' => 'wheels_error'
@@ -202,6 +196,16 @@ class TAF_Shortcode {
             return;
         }
 
+        // Ellenőrizzük, hogy a WooCommerce aktív-e
+        if (!class_exists('WooCommerce')) {
+            error_log('TAF Error: WooCommerce nincs aktiválva');
+            wp_send_json_error(array(
+                'message' => 'WooCommerce nincs aktiválva.',
+                'code' => 'woocommerce_inactive'
+            ));
+            return;
+        }
+
         // Lekérjük az összes terméket
         $args = array(
             'post_type' => 'product',
@@ -211,14 +215,16 @@ class TAF_Shortcode {
             'order' => 'ASC'
         );
 
-        $products = wc_get_products($args);
-        
-        if (!empty($products)) {
+        $query = new WP_Query($args);
+
+        if ($query->have_posts()) {
+            $product_ids = wp_list_pluck($query->posts, 'ID');
+            $products = array_map('wc_get_product', $product_ids);
+            $products = array_filter($products);
+
             $all_wheels = array();
             foreach ($products as $product) {
-                // Csak akkor adjuk hozzá, ha van készleten
                 if ($product->is_in_stock()) {
-                    // Árak formázása
                     $regular_price = $product->get_regular_price();
                     $sale_price = $product->get_sale_price();
                     $price = $product->get_price();
@@ -230,6 +236,7 @@ class TAF_Shortcode {
                         'regular_price' => $regular_price ? number_format($regular_price, 0, ',', ' ') : '',
                         'sale_price' => $sale_price ? number_format($sale_price, 0, ',', ' ') : '',
                         'stock_quantity' => $product->get_stock_quantity(),
+                        'stock_status' => $product->get_stock_status(),
                         'permalink' => $product->get_permalink(),
                         'image_url' => wp_get_attachment_image_url($product->get_image_id(), 'medium'),
                         'size' => $product->get_attribute('pa_atmero'),
@@ -238,9 +245,16 @@ class TAF_Shortcode {
                 }
             }
 
-            error_log('TAF All Wheels Found: ' . count($all_wheels));
-            wp_send_json_success($all_wheels);
+            if (!empty($all_wheels)) {
+                wp_send_json_success($all_wheels);
+            } else {
+                wp_send_json_error(array(
+                    'message' => 'Nem található készleten lévő felni.',
+                    'code' => 'no_stock'
+                ));
+            }
         } else {
+            error_log('TAF Error: Nem található termék');
             wp_send_json_error(array(
                 'message' => 'Nem található elérhető felni.',
                 'code' => 'no_wheels'
