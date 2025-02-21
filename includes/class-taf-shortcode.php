@@ -3,20 +3,20 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class AFS_Shortcode {
+class TAF_Shortcode {
     private $api;
 
     public function __construct($api) {
         $this->api = $api;
-        add_shortcode('auto_felni_szuro', array($this, 'render_filter'));
-        add_action('wp_ajax_afs_get_makes', array($this, 'ajax_get_makes'));
-        add_action('wp_ajax_nopriv_afs_get_makes', array($this, 'ajax_get_makes'));
-        add_action('wp_ajax_afs_get_models', array($this, 'ajax_get_models'));
-        add_action('wp_ajax_nopriv_afs_get_models', array($this, 'ajax_get_models'));
-        add_action('wp_ajax_afs_get_years', array($this, 'ajax_get_years'));
-        add_action('wp_ajax_nopriv_afs_get_years', array($this, 'ajax_get_years'));
-        add_action('wp_ajax_afs_search_wheels', array($this, 'ajax_search_wheels'));
-        add_action('wp_ajax_nopriv_afs_search_wheels', array($this, 'ajax_search_wheels'));
+        add_shortcode('topalufelni_filter', array($this, 'render_filter'));
+        add_action('wp_ajax_taf_get_makes', array($this, 'ajax_get_makes'));
+        add_action('wp_ajax_nopriv_taf_get_makes', array($this, 'ajax_get_makes'));
+        add_action('wp_ajax_taf_get_models', array($this, 'ajax_get_models'));
+        add_action('wp_ajax_nopriv_taf_get_models', array($this, 'ajax_get_models'));
+        add_action('wp_ajax_taf_get_years', array($this, 'ajax_get_years'));
+        add_action('wp_ajax_nopriv_taf_get_years', array($this, 'ajax_get_years'));
+        add_action('wp_ajax_taf_search_wheels', array($this, 'ajax_search_wheels'));
+        add_action('wp_ajax_nopriv_taf_search_wheels', array($this, 'ajax_search_wheels'));
     }
 
     /**
@@ -25,35 +25,35 @@ class AFS_Shortcode {
     public function render_filter($atts) {
         ob_start();
         ?>
-        <div class="afs-container">
-            <form id="afs-search-form" class="afs-filter-form">
-                <div class="afs-select-group">
-                    <label for="afs-make">Gyártó:</label>
-                    <select id="afs-make" class="afs-select" disabled>
+        <div class="taf-container">
+            <form id="taf-search-form" class="taf-filter-form">
+                <div class="taf-select-group">
+                    <label for="taf-make">Gyártó:</label>
+                    <select id="taf-make" class="taf-select" disabled>
                         <option value="">Válassz gyártót...</option>
                     </select>
                 </div>
 
-                <div class="afs-select-group">
-                    <label for="afs-model">Modell:</label>
-                    <select id="afs-model" class="afs-select" disabled>
+                <div class="taf-select-group">
+                    <label for="taf-model">Modell:</label>
+                    <select id="taf-model" class="taf-select" disabled>
                         <option value="">Válassz modellt...</option>
                     </select>
                 </div>
 
-                <div class="afs-select-group">
-                    <label for="afs-year">Évjárat:</label>
-                    <select id="afs-year" class="afs-select" disabled>
+                <div class="taf-select-group">
+                    <label for="taf-year">Évjárat:</label>
+                    <select id="taf-year" class="taf-select" disabled>
                         <option value="">Válassz évet...</option>
                     </select>
                 </div>
 
-                <button type="submit" class="afs-button">Keresés</button>
+                <button type="submit" class="taf-button">Keresés</button>
             </form>
 
-            <div class="afs-error"></div>
-            <div class="afs-loading">Betöltés...</div>
-            <div class="afs-results"></div>
+            <div class="taf-error"></div>
+            <div class="taf-loading">Betöltés...</div>
+            <div class="taf-results"></div>
         </div>
         <?php
         return ob_get_clean();
@@ -63,7 +63,7 @@ class AFS_Shortcode {
      * AJAX végpontok
      */
     public function ajax_get_makes() {
-        check_ajax_referer('afs-ajax-nonce', 'nonce');
+        check_ajax_referer('taf-ajax-nonce', 'nonce');
         
         $makes = $this->api->get_makes();
         
@@ -75,7 +75,7 @@ class AFS_Shortcode {
     }
 
     public function ajax_get_models() {
-        check_ajax_referer('afs-ajax-nonce', 'nonce');
+        check_ajax_referer('taf-ajax-nonce', 'nonce');
         
         $make = sanitize_text_field($_POST['make']);
         
@@ -94,7 +94,7 @@ class AFS_Shortcode {
     }
 
     public function ajax_get_years() {
-        check_ajax_referer('afs-ajax-nonce', 'nonce');
+        check_ajax_referer('taf-ajax-nonce', 'nonce');
         
         $make = sanitize_text_field($_POST['make']);
         $model = sanitize_text_field($_POST['model']);
@@ -114,7 +114,7 @@ class AFS_Shortcode {
     }
 
     public function ajax_search_wheels() {
-        check_ajax_referer('afs-ajax-nonce', 'nonce');
+        check_ajax_referer('taf-ajax-nonce', 'nonce');
         
         $make = sanitize_text_field($_POST['make']);
         $model = sanitize_text_field($_POST['model']);

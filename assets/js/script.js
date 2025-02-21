@@ -4,12 +4,12 @@ jQuery(document).ready(function($) {
     let years = [];
 
     // Cache elemek
-    const $makeSelect = $('#afs-make');
-    const $modelSelect = $('#afs-model');
-    const $yearSelect = $('#afs-year');
-    const $loading = $('.afs-loading');
-    const $error = $('.afs-error');
-    const $results = $('.afs-results');
+    const $makeSelect = $('#taf-make');
+    const $modelSelect = $('#taf-model');
+    const $yearSelect = $('#taf-year');
+    const $loading = $('.taf-loading');
+    const $error = $('.taf-error');
+    const $results = $('.taf-results');
 
     // Gyártók betöltése
     function loadMakes() {
@@ -17,11 +17,11 @@ jQuery(document).ready(function($) {
         $error.hide();
 
         $.ajax({
-            url: afsAjax.ajaxurl,
+            url: tafAjax.ajaxurl,
             type: 'POST',
             data: {
-                action: 'afs_get_makes',
-                nonce: afsAjax.nonce
+                action: 'taf_get_makes',
+                nonce: tafAjax.nonce
             },
             success: function(response) {
                 if (response.success) {
@@ -48,12 +48,12 @@ jQuery(document).ready(function($) {
         $yearSelect.empty().append('<option value="">Válassz évet...</option>').prop('disabled', true);
 
         $.ajax({
-            url: afsAjax.ajaxurl,
+            url: tafAjax.ajaxurl,
             type: 'POST',
             data: {
-                action: 'afs_get_models',
+                action: 'taf_get_models',
                 make: make,
-                nonce: afsAjax.nonce
+                nonce: tafAjax.nonce
             },
             success: function(response) {
                 if (response.success) {
@@ -79,13 +79,13 @@ jQuery(document).ready(function($) {
         $yearSelect.empty().append('<option value="">Válassz évet...</option>').prop('disabled', true);
 
         $.ajax({
-            url: afsAjax.ajaxurl,
+            url: tafAjax.ajaxurl,
             type: 'POST',
             data: {
-                action: 'afs_get_years',
+                action: 'taf_get_years',
                 make: make,
                 model: model,
-                nonce: afsAjax.nonce
+                nonce: tafAjax.nonce
             },
             success: function(response) {
                 if (response.success) {
@@ -156,7 +156,7 @@ jQuery(document).ready(function($) {
     });
 
     // Keresés indítása
-    $('#afs-search-form').on('submit', function(e) {
+    $('#taf-search-form').on('submit', function(e) {
         e.preventDefault();
         const make = $makeSelect.val();
         const model = $modelSelect.val();
@@ -176,14 +176,14 @@ jQuery(document).ready(function($) {
         $results.empty();
 
         $.ajax({
-            url: afsAjax.ajaxurl,
+            url: tafAjax.ajaxurl,
             type: 'POST',
             data: {
-                action: 'afs_search_wheels',
+                action: 'taf_search_wheels',
                 make: make,
                 model: model,
                 year: year,
-                nonce: afsAjax.nonce
+                nonce: tafAjax.nonce
             },
             success: function(response) {
                 if (response.success) {
@@ -209,7 +209,7 @@ jQuery(document).ready(function($) {
 
         wheels.forEach(function(wheel) {
             const wheelCard = `
-                <div class="afs-result-card">
+                <div class="taf-result-card">
                     <h3>${wheel.make} ${wheel.model}</h3>
                     <p>Méret: ${wheel.size}"</p>
                     <p>Szélesség: ${wheel.width}</p>

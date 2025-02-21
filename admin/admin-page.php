@@ -4,30 +4,30 @@ if (!defined('ABSPATH')) {
 }
 
 // Beállítások mentése
-if (isset($_POST['afs_save_settings']) && check_admin_referer('afs_settings_nonce')) {
+if (isset($_POST['taf_save_settings']) && check_admin_referer('taf_settings_nonce')) {
     $settings = array(
         'api_key' => sanitize_text_field($_POST['api_key']),
         'cache_time' => absint($_POST['cache_time'])
     );
     
-    update_option('afs_plugin_settings', $settings);
+    update_option('taf_plugin_settings', $settings);
     echo '<div class="notice notice-success"><p>A beállítások sikeresen mentve!</p></div>';
 }
 
 // Aktuális beállítások lekérése
-$settings = get_option('afs_plugin_settings', array(
-    'api_key' => AFS_API_KEY,
+$settings = get_option('taf_plugin_settings', array(
+    'api_key' => TAF_API_KEY,
     'cache_time' => 86400
 ));
 ?>
 
 <div class="wrap">
-    <h1>Auto Felni Szűrő Beállítások</h1>
+    <h1>TopAlufelni Filter Beállítások</h1>
     
     <div class="card">
         <h2>API Beállítások</h2>
         <form method="post" action="">
-            <?php wp_nonce_field('afs_settings_nonce'); ?>
+            <?php wp_nonce_field('taf_settings_nonce'); ?>
             
             <table class="form-table">
                 <tr>
@@ -64,7 +64,7 @@ $settings = get_option('afs_plugin_settings', array(
             
             <p class="submit">
                 <input type="submit" 
-                       name="afs_save_settings" 
+                       name="taf_save_settings" 
                        class="button button-primary" 
                        value="Beállítások Mentése">
             </p>
@@ -74,7 +74,7 @@ $settings = get_option('afs_plugin_settings', array(
     <div class="card">
         <h2>Használati Útmutató</h2>
         <p>A felni szűrő megjelenítéséhez használd a következő shortcode-ot:</p>
-        <code>[auto_felni_szuro]</code>
+        <code>[topalufelni_filter]</code>
         
         <h3>Shortcode Használata</h3>
         <ol>

@@ -3,13 +3,13 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class AFS_API {
+class TAF_API {
     private $api_key;
     private $api_base_url = 'https://api.wheel-size.com/v1';
     private $cache_time;
 
     public function __construct() {
-        $settings = get_option('afs_plugin_settings');
+        $settings = get_option('taf_plugin_settings');
         $this->api_key = $settings['api_key'];
         $this->cache_time = $settings['cache_time'];
     }
@@ -22,7 +22,7 @@ class AFS_API {
         
         $url = add_query_arg($params, $this->api_base_url . $endpoint);
         
-        $cache_key = 'afs_' . md5($url);
+        $cache_key = 'taf_' . md5($url);
         $cached_response = get_transient($cache_key);
         
         if ($cached_response !== false) {
