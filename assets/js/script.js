@@ -256,7 +256,7 @@ jQuery(document).ready(function($) {
 
             const wheelCard = `
                 <div class="taf-result-card">
-                    <h3>${wheel.make} ${wheel.model}</h3>
+                    <h3>${$makeSelect.find('option:selected').text()} ${$modelSelect.find('option:selected').text()}</h3>
                     ${position}
                     ${size}
                     ${width}
