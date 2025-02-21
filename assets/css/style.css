@@ -137,9 +137,6 @@
     overflow: hidden;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     transition: transform 0.3s ease;
-    opacity: 0;
-    transform: translateY(20px);
-    animation: fadeInUp 0.5s ease forwards;
 }
 
 .taf-result-card:hover {
@@ -166,7 +163,7 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.5s ease;
+    transition: transform 0.3s ease;
 }
 
 .taf-result-card:hover .taf-product-image img {
@@ -327,10 +324,6 @@
     padding: 20px;
     margin-top: 20px;
     font-size: 14px;
-    opacity: 0;
-    transform: translateY(10px);
-    animation: fadeInUp 0.5s ease forwards;
-    animation-delay: 1.2s;
 }
 
 .taf-debug-info h4 {
@@ -362,144 +355,4 @@
 
 .taf-debug-section p:last-child {
     margin-bottom: 0;
-}
-
-/* Alap animációk minden elemhez */
-.taf-container * {
-    transition: all 0.3s ease-in-out;
-}
-
-/* Smooth megjelenés az eredményeknek */
-.taf-result-card {
-    opacity: 0;
-    transform: translateY(20px);
-    animation: fadeInUp 0.5s ease forwards;
-}
-
-/* Késleltetett animáció minden következő kártyának */
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Minden kártya késleltetett megjelenése */
-.taf-result-card:nth-child(1) { animation-delay: 0.1s; }
-.taf-result-card:nth-child(2) { animation-delay: 0.2s; }
-.taf-result-card:nth-child(3) { animation-delay: 0.3s; }
-.taf-result-card:nth-child(4) { animation-delay: 0.4s; }
-.taf-result-card:nth-child(5) { animation-delay: 0.5s; }
-.taf-result-card:nth-child(6) { animation-delay: 0.6s; }
-.taf-result-card:nth-child(7) { animation-delay: 0.7s; }
-.taf-result-card:nth-child(8) { animation-delay: 0.8s; }
-.taf-result-card:nth-child(9) { animation-delay: 0.9s; }
-.taf-result-card:nth-child(10) { animation-delay: 1s; }
-
-/* Smooth átmenet a képeknek */
-.taf-product-image img {
-    transition: transform 0.5s ease;
-}
-
-.taf-product-image:hover img {
-    transform: scale(1.05);
-}
-
-/* Betöltési állapot a gombnak */
-.taf-button {
-    position: relative;
-    overflow: hidden;
-}
-
-.taf-button.loading {
-    pointer-events: none;
-    opacity: 0.8;
-}
-
-.taf-button.loading:before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 200%;
-    height: 100%;
-    background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(255, 255, 255, 0.2),
-        transparent
-    );
-    animation: loading 1.5s infinite;
-}
-
-@keyframes loading {
-    from {
-        transform: translateX(-100%);
-    }
-    to {
-        transform: translateX(100%);
-    }
-}
-
-/* Smooth átmenet a select mezőknek */
-.taf-select {
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.taf-select:hover {
-    border-color: #007cba;
-}
-
-/* Error üzenet smooth megjelenés */
-.taf-error {
-    opacity: 0;
-    transform: translateY(-10px);
-    animation: fadeInDown 0.3s ease forwards;
-}
-
-@keyframes fadeInDown {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Loading spinner */
-.taf-loading {
-    display: none;
-    position: relative;
-    width: 50px;
-    height: 50px;
-    margin: 20px auto;
-}
-
-.taf-loading:after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border: 3px solid #f3f3f3;
-    border-top: 3px solid #00FF00;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* Smooth scroll a konténerhez */
-html {
-    scroll-behavior: smooth;
 } 
