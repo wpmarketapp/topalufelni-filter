@@ -210,7 +210,7 @@ class TAF_Shortcode {
         $args = array(
             'post_type' => 'product',
             'post_status' => 'publish',
-            'posts_per_page' => -1,
+            'posts_per_page' => 10,
             'orderby' => 'title',
             'order' => 'ASC'
         );
@@ -242,6 +242,11 @@ class TAF_Shortcode {
                         'size' => $product->get_attribute('pa_atmero'),
                         'bolt_pattern' => $product->get_attribute('pa_osztokor')
                     );
+
+                    // Ha már 10 terméket összegyűjtöttünk, kilépünk a ciklusból
+                    if (count($all_wheels) >= 10) {
+                        break;
+                    }
                 }
             }
 
