@@ -121,25 +121,86 @@
 .taf-result-card {
     background: #fff;
     border-radius: 8px;
-    padding: 20px;
+    overflow: hidden;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     transition: transform 0.3s ease;
 }
 
 .taf-result-card:hover {
     transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.taf-product-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.taf-product-image {
+    position: relative;
+    padding-top: 75%; /* 4:3 arány */
+    overflow: hidden;
+}
+
+.taf-product-image img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.taf-result-card:hover .taf-product-image img {
+    transform: scale(1.05);
 }
 
 .taf-result-card h3 {
-    margin: 0 0 15px 0;
+    margin: 15px;
     color: #333;
     font-size: 16px;
+    font-weight: 600;
+    text-align: center;
 }
 
-.taf-result-card p {
-    margin: 8px 0;
-    color: #666;
+.taf-product-price {
+    text-align: center;
+    margin: 10px 15px;
+}
+
+.taf-sale-price {
+    color: #e41e31;
+    font-weight: 600;
+    font-size: 18px;
+    margin-right: 8px;
+}
+
+.taf-regular-price {
+    text-decoration: line-through;
+    color: #999;
     font-size: 14px;
+}
+
+.taf-price {
+    color: #333;
+    font-weight: 600;
+    font-size: 18px;
+}
+
+.taf-specs {
+    background: #f9f9f9;
+    padding: 15px;
+    margin-top: 10px;
+    border-top: 1px solid #eee;
+    font-size: 14px;
+    color: #666;
+}
+
+.taf-specs span {
+    display: block;
+    margin: 5px 0;
 }
 
 .taf-matching-products {
@@ -186,41 +247,10 @@
     color: #333;
 }
 
-.taf-product-price {
-    margin: 10px 0;
-    font-weight: 600;
-}
-
-.taf-sale-price {
-    color: #e41e31;
-    margin-right: 8px;
-}
-
-.taf-regular-price {
-    text-decoration: line-through;
-    color: #999;
-    font-size: 0.9em;
-}
-
-.taf-price {
-    color: #333;
-}
-
 .taf-stock {
     color: #666;
     font-size: 0.9em;
     margin: 5px 0;
-}
-
-.taf-product-link {
-    display: inline-block;
-    padding: 8px 15px;
-    background-color: #00FF00;
-    color: #fff;
-    text-decoration: none;
-    border-radius: 4px;
-    margin-top: 10px;
-    transition: background-color 0.2s ease;
 }
 
 .taf-product-link:hover {
@@ -241,6 +271,7 @@
     
     .taf-results {
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 15px;
     }
     
     .taf-select {
@@ -250,6 +281,14 @@
     
     .taf-product-grid {
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+    
+    .taf-result-card h3 {
+        font-size: 14px;
+    }
+    
+    .taf-specs {
+        font-size: 12px;
     }
 }
 
