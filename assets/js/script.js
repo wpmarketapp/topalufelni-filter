@@ -224,10 +224,21 @@ jQuery(document).ready(function($) {
                 if (response.success && Array.isArray(response.data)) {
                     displayResults(response.data);
                 } else {
-                    const message = response.data && response.data.message 
+                    // Ha van debug információ, azt is megjelenítjük
+                    let message = response.data && response.data.message 
                         ? response.data.message 
                         : 'Hiba történt a keresés során.';
-                    showError(message);
+
+                    if (response.data && response.data.debug) {
+                        message += '<div class="taf-debug-info">';
+                        message += '<div style="border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; padding: 10px 0; margin: 10px 0; text-align: center;">';
+                        message += '<p><strong>API által kapott felni méret:</strong> ' + response.data.debug.api_sizes + '</p>';
+                        message += '<p><strong>Elérhető termékek méretei:</strong> ' + response.data.debug.available_sizes + '</p>';
+                        message += '</div>';
+                        message += '</div>';
+                    }
+                    
+                    $results.html(message);
                 }
             },
             error: function(jqXHR, textStatus, errorThrown) {

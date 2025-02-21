@@ -174,12 +174,7 @@ class TAF_Shortcode {
                     'message' => isset($response['message']) ? $response['message'] : 'Nem található felni a megadott paraméterekkel.',
                     'code' => 'no_results',
                     'debug' => array(
-                        'api_response' => $response['api_response'],
-                        'car_specs' => array(
-                            'make' => $make,
-                            'model' => $model,
-                            'year' => $year
-                        )
+                        'api_response' => $response['api_response']
                     )
                 ));
             } else {
@@ -191,29 +186,23 @@ class TAF_Shortcode {
             return;
         }
 
-        // Összegyűjtjük a méreteket és osztóköröket
-        $sizes = array();
-        $bolt_patterns = array();
+        // Összegyűjtjük a méreteket
+        $api_sizes = array();
         foreach ($response['wheel_sets'] as $set) {
             if (isset($set['front'])) {
-                $sizes[] = sanitize_title($set['front']['diameter']);
-                $bolt_patterns[] = sanitize_title(str_replace('x', '-', $set['front']['bolt_pattern']));
+                $api_sizes[] = $set['front']['diameter'] . '"';
             }
             if (isset($set['rear'])) {
-                $sizes[] = sanitize_title($set['rear']['diameter']);
-                $bolt_patterns[] = sanitize_title(str_replace('x', '-', $set['rear']['bolt_pattern']));
+                $api_sizes[] = $set['rear']['diameter'] . '"';
             }
         }
+        $api_sizes = array_unique($api_sizes);
+        sort($api_sizes);
 
-        // Lekérjük az összes elérhető felni méretet és osztókört
+        // Lekérjük az összes elérhető felni méretet
         $available_sizes = array();
-        $available_bolt_patterns = array();
         $terms_size = get_terms(array(
             'taxonomy' => 'pa_atmero',
-            'hide_empty' => true
-        ));
-        $terms_bolt = get_terms(array(
-            'taxonomy' => 'pa_osztokor',
             'hide_empty' => true
         ));
         
@@ -221,11 +210,7 @@ class TAF_Shortcode {
             foreach ($terms_size as $term) {
                 $available_sizes[] = $term->name;
             }
-        }
-        if (!is_wp_error($terms_bolt)) {
-            foreach ($terms_bolt as $term) {
-                $available_bolt_patterns[] = $term->name;
-            }
+            sort($available_sizes);
         }
 
         // Lekérjük a termékeket
@@ -241,21 +226,11 @@ class TAF_Shortcode {
         );
 
         // Méret szűrő hozzáadása
-        if (!empty($sizes)) {
+        if (!empty($api_sizes)) {
             $args['tax_query'][] = array(
                 'taxonomy' => 'pa_atmero',
-                'field' => 'slug',
-                'terms' => $sizes,
-                'operator' => 'IN'
-            );
-        }
-
-        // Osztókör szűrő hozzáadása
-        if (!empty($bolt_patterns)) {
-            $args['tax_query'][] = array(
-                'taxonomy' => 'pa_osztokor',
-                'field' => 'slug',
-                'terms' => $bolt_patterns,
+                'field' => 'name',
+                'terms' => $api_sizes,
                 'operator' => 'IN'
             );
         }
@@ -304,21 +279,8 @@ class TAF_Shortcode {
                     'message' => 'Nem található elérhető felni a megadott paraméterekkel.',
                     'code' => 'no_matching_wheels',
                     'debug' => array(
-                        'api_response' => $response['debug'],
-                        'car_specs' => array(
-                            'make' => $make,
-                            'model' => $model,
-                            'year' => $year,
-                            'wheel_sets' => $response['wheel_sets']
-                        ),
-                        'available_products' => array(
-                            'sizes' => array_unique($available_sizes),
-                            'bolt_patterns' => array_unique($available_bolt_patterns)
-                        ),
-                        'search_params' => array(
-                            'sizes' => array_unique($sizes),
-                            'bolt_patterns' => array_unique($bolt_patterns)
-                        )
+                        'api_sizes' => implode(' / ', $api_sizes),
+                        'available_sizes' => implode(' / ', $available_sizes)
                     )
                 );
                 wp_send_json_error($debug_info);
