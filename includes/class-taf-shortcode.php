@@ -159,6 +159,12 @@ class TAF_Shortcode {
         $model = sanitize_text_field($_POST['model']);
         $year = intval($_POST['year']);
         
+        error_log('TAF Debug - Keresési paraméterek: ' . print_r(array(
+            'make' => $make,
+            'model' => $model,
+            'year' => $year
+        ), true));
+
         if (empty($make) || empty($model) || empty($year)) {
             wp_send_json_error(array(
                 'message' => 'Kérlek válassz ki minden mezőt!',
@@ -169,9 +175,11 @@ class TAF_Shortcode {
 
         // Lekérjük a felni specifikációkat
         $response = $this->api->get_wheel_specs($make, $model, $year);
+        error_log('TAF Debug - API válasz: ' . print_r($response, true));
 
         // Ha hiba történt vagy nincs adat
         if (isset($response['error']) || empty($response['wheel_sets'])) {
+            error_log('TAF Debug - Nincs találat vagy hiba: ' . print_r($response, true));
             wp_send_json_error(array(
                 'message' => 'Nem található felni a megadott paraméterekkel.',
                 'code' => 'no_results'
@@ -183,14 +191,12 @@ class TAF_Shortcode {
         $needed_sizes = array();
         foreach ($response['wheel_sets'] as $set) {
             if (isset($set['front'])) {
-                // Csak a számot tartjuk meg, minden mást eltávolítunk
                 $size = preg_replace('/[^0-9]/', '', $set['front']['diameter']);
                 if (!empty($size)) {
                     $needed_sizes[] = $size;
                 }
             }
             if (isset($set['rear'])) {
-                // Csak a számot tartjuk meg, minden mást eltávolítunk
                 $size = preg_replace('/[^0-9]/', '', $set['rear']['diameter']);
                 if (!empty($size)) {
                     $needed_sizes[] = $size;
@@ -200,14 +206,35 @@ class TAF_Shortcode {
         $needed_sizes = array_unique($needed_sizes);
         sort($needed_sizes);
 
+        error_log('TAF Debug - Szükséges méretek: ' . print_r($needed_sizes, true));
+
         // Ha nincs méret, nincs mit keresni
         if (empty($needed_sizes)) {
+            error_log('TAF Debug - Nem található méret');
             wp_send_json_error(array(
                 'message' => 'Nem található felni méret a megadott paraméterekkel.',
                 'code' => 'no_sizes'
             ));
             return;
         }
+
+        // Lekérjük az összes elérhető méretet
+        $available_terms = get_terms(array(
+            'taxonomy' => 'pa_atmero',
+            'hide_empty' => true
+        ));
+
+        $available_sizes = array();
+        if (!is_wp_error($available_terms)) {
+            foreach ($available_terms as $term) {
+                $size = preg_replace('/[^0-9]/', '', $term->name);
+                if (!empty($size)) {
+                    $available_sizes[] = $size;
+                }
+            }
+            sort($available_sizes);
+        }
+        error_log('TAF Debug - Elérhető méretek: ' . print_r($available_sizes, true));
 
         // Lekérjük a termékeket a megfelelő méretekkel
         $args = array(
@@ -226,21 +253,27 @@ class TAF_Shortcode {
             )
         );
 
+        error_log('TAF Debug - WP_Query argumentumok: ' . print_r($args, true));
+
         $query = new WP_Query($args);
+        error_log('TAF Debug - Találatok száma: ' . $query->post_count);
+
         $matching_wheels = array();
 
         if ($query->have_posts()) {
             $product_ids = wp_list_pluck($query->posts, 'ID');
+            error_log('TAF Debug - Talált termék ID-k: ' . print_r($product_ids, true));
+            
             $products = array_map('wc_get_product', $product_ids);
             $products = array_filter($products);
 
             foreach ($products as $product) {
                 if ($product->is_in_stock()) {
-                    // Termék méretének ellenőrzése
                     $product_size = preg_replace('/[^0-9]/', '', $product->get_attribute('pa_atmero'));
+                    error_log('TAF Debug - Termék ellenőrzése - ID: ' . $product->get_id() . ', Méret: ' . $product_size);
                     
-                    // Csak akkor adjuk hozzá, ha a méret megegyezik valamelyik szükséges mérettel
                     if (in_array($product_size, $needed_sizes)) {
+                        error_log('TAF Debug - Megfelelő termék találat - ID: ' . $product->get_id());
                         $regular_price = $product->get_regular_price();
                         $sale_price = $product->get_sale_price();
                         $price = $product->get_price();
@@ -260,40 +293,29 @@ class TAF_Shortcode {
                         if (count($matching_wheels) >= 10) {
                             break;
                         }
+                    } else {
+                        error_log('TAF Debug - Nem megfelelő méret - Termék ID: ' . $product->get_id() . ', Méret: ' . $product_size);
                     }
+                } else {
+                    error_log('TAF Debug - Nincs készleten - Termék ID: ' . $product->get_id());
                 }
             }
         }
 
+        error_log('TAF Debug - Megfelelő termékek száma: ' . count($matching_wheels));
+
         if (!empty($matching_wheels)) {
             wp_send_json_success($matching_wheels);
         } else {
-            // Készítsünk egy érthető hibaüzenetet a méretekkel
             $error_message = 'Nem található elérhető felni a megadott paraméterekkel.<br><br>';
             $error_message .= 'API által visszaadott méretek: ' . implode(', ', array_map(function($size) { 
                 return $size . '"'; 
             }, $needed_sizes)) . '<br>';
-
-            // Lekérjük az összes elérhető méretet
-            $available_terms = get_terms(array(
-                'taxonomy' => 'pa_atmero',
-                'hide_empty' => true
-            ));
-
-            $available_sizes = array();
-            if (!is_wp_error($available_terms)) {
-                foreach ($available_terms as $term) {
-                    $size = preg_replace('/[^0-9]/', '', $term->name);
-                    if (!empty($size)) {
-                        $available_sizes[] = $size;
-                    }
-                }
-                sort($available_sizes);
-            }
-
             $error_message .= 'Elérhető méretek: ' . implode(', ', array_map(function($size) {
                 return $size . '"';
             }, $available_sizes));
+
+            error_log('TAF Debug - Hibaüzenet: ' . $error_message);
 
             wp_send_json_error(array(
                 'message' => $error_message,
