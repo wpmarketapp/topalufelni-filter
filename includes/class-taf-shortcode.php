@@ -35,37 +35,37 @@ class TAF_Shortcode {
         ob_start();
         try {
             ?>
-            <div class="taf-container">
-                <form id="taf-search-form" class="taf-filter-form">
-                    <div class="taf-select-group">
-                        <label for="taf-make">Gyártó:</label>
-                        <select id="taf-make" class="taf-select" disabled>
+            <div class="taf-container taf-unique-container" style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+                <form id="taf-search-form" class="taf-filter-form taf-unique-form" style="background: #000; padding: 20px; border-radius: 8px; display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end;">
+                    <div class="taf-select-group taf-unique-group" style="flex: 1; min-width: 200px; margin: 0;">
+                        <label for="taf-make" style="display: block; margin-bottom: 5px; font-weight: 600; color: #fff;">Gyártó:</label>
+                        <select id="taf-make" class="taf-select taf-unique-select" disabled style="display: block; width: 100%; height: 40px; padding: 8px 24px 8px 12px; color: #fff; background-color: #333; border: 1px solid #444; border-radius: 4px;">
                             <option value="">Válassz gyártót...</option>
                         </select>
                     </div>
 
-                    <div class="taf-select-group">
-                        <label for="taf-model">Modell:</label>
-                        <select id="taf-model" class="taf-select" disabled>
+                    <div class="taf-select-group taf-unique-group" style="flex: 1; min-width: 200px; margin: 0;">
+                        <label for="taf-model" style="display: block; margin-bottom: 5px; font-weight: 600; color: #fff;">Modell:</label>
+                        <select id="taf-model" class="taf-select taf-unique-select" disabled style="display: block; width: 100%; height: 40px; padding: 8px 24px 8px 12px; color: #fff; background-color: #333; border: 1px solid #444; border-radius: 4px;">
                             <option value="">Válassz modellt...</option>
                         </select>
                     </div>
 
-                    <div class="taf-select-group">
-                        <label for="taf-year">Évjárat:</label>
-                        <select id="taf-year" class="taf-select" disabled>
+                    <div class="taf-select-group taf-unique-group" style="flex: 1; min-width: 200px; margin: 0;">
+                        <label for="taf-year" style="display: block; margin-bottom: 5px; font-weight: 600; color: #fff;">Évjárat:</label>
+                        <select id="taf-year" class="taf-select taf-unique-select" disabled style="display: block; width: 100%; height: 40px; padding: 8px 24px 8px 12px; color: #fff; background-color: #333; border: 1px solid #444; border-radius: 4px;">
                             <option value="">Válassz évet...</option>
                         </select>
                     </div>
 
-                    <button type="submit" class="taf-button">Keresés</button>
+                    <button type="submit" class="taf-button taf-unique-button" style="display: block; min-width: 150px; padding: 12px 20px; color: #000; background-color: #00FF00; border: none; border-radius: 4px; cursor: pointer;">Keresés</button>
                     <?php if ($is_dev_mode): ?>
-                    <button type="button" id="taf-all-wheels" class="taf-button taf-button-secondary">Developer Test</button>
+                    <button type="button" id="taf-all-wheels" class="taf-button taf-button-secondary taf-unique-button" style="background-color: #444; color: #fff; margin-left: 10px;">Developer Test</button>
                     <?php endif; ?>
                 </form>
 
-                <div class="taf-error"></div>
-                <div class="taf-results"></div>
+                <div class="taf-error taf-unique-error"></div>
+                <div class="taf-results taf-unique-results"></div>
             </div>
             <?php
             // Puffer tartalmának lekérése és törlése

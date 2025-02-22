@@ -51,8 +51,23 @@ add_action('init', 'taf_init');
 
 // Stílusok és szkriptek betöltése
 function taf_enqueue_scripts() {
-    wp_enqueue_style('taf-styles', TAF_PLUGIN_URL . 'assets/css/style.css', array(), '1.0.0');
-    wp_enqueue_script('taf-script', TAF_PLUGIN_URL . 'assets/js/script.js', array('jquery'), '1.0.0', true);
+    // CSS betöltése magasabb prioritással
+    wp_enqueue_style(
+        'taf-styles', 
+        TAF_PLUGIN_URL . 'assets/css/style.css', 
+        array(), 
+        filemtime(TAF_PLUGIN_DIR . 'assets/css/style.css'), // Verzió szám a fájl módosítási ideje alapján
+        'all'
+    );
+    
+    // JavaScript betöltése
+    wp_enqueue_script(
+        'taf-script', 
+        TAF_PLUGIN_URL . 'assets/js/script.js', 
+        array('jquery'), 
+        filemtime(TAF_PLUGIN_DIR . 'assets/js/script.js'), 
+        true
+    );
     
     // AJAX URL átadása a JavaScript számára
     wp_localize_script('taf-script', 'tafAjax', array(
@@ -60,6 +75,9 @@ function taf_enqueue_scripts() {
         'nonce' => wp_create_nonce('taf-ajax-nonce')
     ));
 }
+
+// Magasabb prioritással adjuk hozzá a wp_enqueue_scripts hookhoz
+add_action('wp_enqueue_scripts', 'taf_enqueue_scripts', 100);
 
 // Admin menü hozzáadása
 function taf_admin_menu() {
