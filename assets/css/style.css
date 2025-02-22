@@ -86,7 +86,7 @@
     font-weight: 600 !important;
     line-height: 1.5 !important;
     color: #000 !important;
-    background-color: #00FF00 !important;
+    background-color: #29f60c !important;
     border: none !important;
     border-radius: 4px !important;
     cursor: pointer !important;
@@ -97,12 +97,12 @@
 }
 
 .taf-container button.taf-button:hover:not(:disabled) {
-    background-color: #00CC00 !important;
+    background-color: #22c909 !important;
 }
 
 .taf-container button.taf-button:focus {
     outline: 0 !important;
-    box-shadow: 0 0 0 2px rgba(0, 255, 0, 0.25) !important;
+    box-shadow: 0 0 0 2px rgba(41, 246, 12, 0.25) !important;
 }
 
 .taf-container button.taf-button:disabled {
@@ -202,10 +202,10 @@
 }
 
 .taf-sale-price {
-    color: #00FF00;
-    font-weight: 600;
-    font-size: 18px;
-    margin-right: 8px;
+    color: #29f60c !important;
+    font-weight: 600 !important;
+    font-size: 18px !important;
+    margin-right: 8px !important;
 }
 
 .taf-regular-price {
@@ -376,7 +376,7 @@
 }
 
 .taf-debug-info strong {
-    color: #00FF00 !important;
+    color: #29f60c !important;
 }
 
 .taf-debug-section {

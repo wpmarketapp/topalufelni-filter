@@ -58,7 +58,7 @@ class TAF_Shortcode {
                         </select>
                     </div>
 
-                    <button type="submit" class="taf-button taf-unique-button" style="display: block; min-width: 150px; padding: 12px 20px; color: #000; background-color: #00FF00; border: none; border-radius: 4px; cursor: pointer;">Keresés</button>
+                    <button type="submit" class="taf-button taf-unique-button" style="display: block; min-width: 150px; padding: 12px 20px; color: #000; background-color: #29f60c; border: none; border-radius: 4px; cursor: pointer;">Keresés</button>
                     <?php if ($is_dev_mode): ?>
                     <button type="button" id="taf-all-wheels" class="taf-button taf-button-secondary taf-unique-button" style="background-color: #444; color: #fff; margin-left: 10px;">Developer Test</button>
                     <?php endif; ?>
