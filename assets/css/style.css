@@ -1,124 +1,125 @@
 .taf-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
+    max-width: 1200px !important;
+    margin: 0 auto !important;
+    padding: 20px !important;
+    background: transparent !important;
 }
 
 .taf-filter-form {
-    background: #000;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin-bottom: 30px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    align-items: flex-end;
+    background: #000 !important;
+    padding: 20px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+    margin-bottom: 30px !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 15px !important;
+    align-items: flex-end !important;
 }
 
 .taf-select-group {
-    flex: 1;
-    min-width: 200px;
-    margin: 0;
+    flex: 1 !important;
+    min-width: 200px !important;
+    margin: 0 !important;
+    position: relative !important;
 }
 
 .taf-select-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: 600;
-    color: #fff;
+    display: block !important;
+    margin-bottom: 5px !important;
+    font-weight: 600 !important;
+    color: #fff !important;
 }
 
-.taf-select {
-    display: block;
-    width: 100%;
-    height: 40px;
-    padding: 8px 24px 8px 12px;
-    font-size: 14px;
-    font-weight: 400;
-    line-height: 1.5;
-    color: #fff;
-    background-color: #333;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 4px center;
-    background-size: 24px;
-    border: 1px solid #444;
-    border-radius: 4px;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    cursor: pointer;
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+.taf-container select.taf-select {
+    display: block !important;
+    width: 100% !important;
+    height: 40px !important;
+    padding: 8px 24px 8px 12px !important;
+    font-size: 14px !important;
+    font-weight: 400 !important;
+    line-height: 1.5 !important;
+    color: #fff !important;
+    background-color: #333 !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 4px center !important;
+    background-size: 24px !important;
+    border: 1px solid #444 !important;
+    border-radius: 4px !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    cursor: pointer !important;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+    margin: 0 !important;
 }
 
-.taf-select:focus {
-    border-color: #00FF00;
-    outline: 0;
-    box-shadow: 0 0 0 2px rgba(0, 255, 0, 0.25);
+.taf-container select.taf-select:focus {
+    border-color: #00FF00 !important;
+    outline: 0 !important;
+    box-shadow: 0 0 0 2px rgba(0, 255, 0, 0.25) !important;
 }
 
-.taf-select:disabled {
-    background-color: #222;
-    opacity: 0.7;
-    cursor: not-allowed;
+.taf-container select.taf-select:disabled {
+    background-color: #222 !important;
+    opacity: 0.7 !important;
+    cursor: not-allowed !important;
 }
 
-.taf-select option {
-    padding: 8px;
-    font-size: 14px;
-    color: #fff;
-    background-color: #333;
+.taf-container select.taf-select option {
+    padding: 8px !important;
+    font-size: 14px !important;
+    color: #fff !important;
+    background-color: #333 !important;
 }
 
-.taf-select option:first-child {
-    color: #aaa;
+.taf-container select.taf-select option:first-child {
+    color: #aaa !important;
 }
 
-.taf-button {
-    display: block;
-    min-width: 150px;
-    padding: 12px 20px;
-    font-size: 14px;
-    font-weight: 600;
-    line-height: 1.5;
-    color: #000;
-    background-color: #00FF00;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.15s ease-in-out;
-    margin: 0;
+.taf-container button.taf-button {
+    display: block !important;
+    min-width: 150px !important;
+    padding: 12px 20px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    line-height: 1.5 !important;
+    color: #000 !important;
+    background-color: #00FF00 !important;
+    border: none !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease-in-out !important;
+    margin: 0 !important;
+    text-align: center !important;
+    height: 40px !important;
 }
 
-.taf-button:hover:not(:disabled) {
-    background-color: #00CC00;
+.taf-container button.taf-button:hover:not(:disabled) {
+    background-color: #00CC00 !important;
 }
 
-.taf-button:focus {
-    outline: 0;
-    box-shadow: 0 0 0 2px rgba(0, 255, 0, 0.25);
+.taf-container button.taf-button:focus {
+    outline: 0 !important;
+    box-shadow: 0 0 0 2px rgba(0, 255, 0, 0.25) !important;
 }
 
-.taf-button:disabled {
-    background-color: #333;
-    color: #666;
-    cursor: not-allowed;
-    opacity: 0.8;
+.taf-container button.taf-button:disabled {
+    background-color: #333 !important;
+    color: #666 !important;
+    cursor: not-allowed !important;
+    opacity: 0.8 !important;
 }
 
-.taf-button-secondary {
-    background-color: #444;
-    color: #fff;
-    margin-left: 10px;
+.taf-container button.taf-button-secondary {
+    background-color: #444 !important;
+    color: #fff !important;
+    margin-left: 10px !important;
 }
 
-.taf-button-secondary:hover:not(:disabled) {
-    background-color: #555;
-}
-
-.taf-button-secondary:focus {
-    box-shadow: 0 0 0 2px rgba(102, 102, 102, 0.25);
+.taf-container button.taf-button-secondary:hover:not(:disabled) {
+    background-color: #555 !important;
 }
 
 .taf-loading {
@@ -296,31 +297,31 @@
 /* Reszponzív design */
 @media (max-width: 768px) {
     .taf-container {
-        padding: 10px;
+        padding: 10px !important;
     }
     
     .taf-filter-form {
-        flex-direction: column;
-        gap: 15px;
+        flex-direction: column !important;
+        gap: 15px !important;
     }
     
     .taf-select-group {
-        width: 100%;
-        margin-bottom: 15px;
+        width: 100% !important;
+        margin-bottom: 15px !important;
     }
     
-    .taf-select {
-        font-size: 16px;
-        height: 44px;
+    .taf-container select.taf-select {
+        font-size: 16px !important;
+        height: 44px !important;
     }
     
-    .taf-button {
-        width: 100%;
-        margin: 0;
+    .taf-container button.taf-button {
+        width: 100% !important;
+        margin: 0 !important;
     }
     
-    .taf-button-secondary {
-        margin: 10px 0 0 0;
+    .taf-container button.taf-button-secondary {
+        margin: 10px 0 0 0 !important;
     }
     
     .taf-results {
@@ -340,11 +341,11 @@
 /* Safari specifikus javítás */
 @media not all and (min-resolution:.001dpcm) { 
     @supports (-webkit-appearance:none) {
-        .taf-select {
-            text-indent: 1px;
-            text-overflow: '';
-            padding-right: 30px;
-            padding-left: 10px;
+        .taf-container select.taf-select {
+            text-indent: 1px !important;
+            text-overflow: '' !important;
+            padding-right: 30px !important;
+            padding-left: 10px !important;
         }
     }
 }
