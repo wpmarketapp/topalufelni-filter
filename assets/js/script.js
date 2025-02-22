@@ -26,9 +26,10 @@ jQuery(document).ready(function($) {
         if (sessionData) {
             const data = JSON.parse(sessionData);
             
-            // Gyártók betöltése után állítjuk be a kiválasztott értéket
-            loadMakes().then(() => {
-                if (data.make) {
+            // Csak akkor állítsuk vissza a találatokat, ha van kiválasztott gyártó
+            if (data.make) {
+                // Gyártók betöltése után állítjuk be a kiválasztott értéket
+                loadMakes().then(() => {
                     $makeSelect.val(data.make);
                     // Modellek betöltése után állítjuk be a kiválasztott értéket
                     loadModels(data.make).then(() => {
@@ -39,18 +40,21 @@ jQuery(document).ready(function($) {
                                 if (data.year) {
                                     $yearSelect.val(data.year);
                                 }
+                                // Csak akkor jelenítjük meg a találatokat, ha minden érték ki van választva
+                                if (data.results && data.make && data.model && data.year) {
+                                    displayResults(data.results);
+                                }
                             });
                         }
                     });
-                }
-            });
-
-            // Találatok visszaállítása
-            if (data.results) {
-                displayResults(data.results);
+                });
+            } else {
+                loadMakes();
+                $results.empty(); // Ha nincs kiválasztott gyártó, töröljük a találatokat
             }
         } else {
             loadMakes();
+            $results.empty(); // Ha nincs mentett adat, töröljük a találatokat
         }
     }
 
@@ -484,6 +488,8 @@ jQuery(document).ready(function($) {
     // Event listeners
     $makeSelect.on('change', function() {
         const selectedMake = $(this).val();
+        $results.empty(); // Találatok törlése minden változtatásnál
+        
         if (selectedMake) {
             loadModels(selectedMake).then(() => {
                 saveSessionData();
@@ -500,6 +506,8 @@ jQuery(document).ready(function($) {
     $modelSelect.on('change', function() {
         const selectedMake = $makeSelect.val();
         const selectedModel = $(this).val();
+        $results.empty(); // Találatok törlése modell változtatásnál is
+        
         if (selectedMake && selectedModel) {
             loadYears(selectedMake, selectedModel).then(() => {
                 saveSessionData();
@@ -513,6 +521,7 @@ jQuery(document).ready(function($) {
     });
 
     $yearSelect.on('change', function() {
+        $results.empty(); // Találatok törlése év változtatásnál is
         saveSessionData();
         initSearch();
     });

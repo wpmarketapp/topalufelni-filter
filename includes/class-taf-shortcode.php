@@ -36,7 +36,7 @@ class TAF_Shortcode {
         try {
             ?>
             <div class="taf-container taf-unique-container" style="max-width: 1200px; margin: 0 auto; padding: 20px;">
-                <form id="taf-search-form" class="taf-filter-form taf-unique-form" style="background: #000; padding: 20px; border-radius: 8px; display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end;">
+                <form id="taf-search-form" class="taf-filter-form taf-unique-form" style="background: #080a0b; padding: 20px; border-radius: 8px; display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end;">
                     <div class="taf-select-group taf-unique-group" style="flex: 1; min-width: 200px; margin: 0;">
                         <label for="taf-make" style="display: block; margin-bottom: 5px; font-weight: 600; color: #fff;">Gyártó:</label>
                         <select id="taf-make" class="taf-select taf-unique-select" disabled style="display: block; width: 100%; height: 40px; padding: 8px 24px 8px 12px; color: #fff; background-color: #333; border: 1px solid #444; border-radius: 4px;">

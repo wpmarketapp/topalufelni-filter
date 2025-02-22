@@ -6,7 +6,7 @@
 }
 
 .taf-filter-form {
-    background: #000 !important;
+    background: #080a0b !important;
     padding: 20px !important;
     border-radius: 8px !important;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
@@ -147,12 +147,12 @@
 }
 
 .taf-result-card {
-    background: #000;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    transition: transform 0.3s ease;
-    border: 1px solid #333;
+    background: #080a0b !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+    transition: transform 0.3s ease !important;
+    border: 1px solid #333 !important;
 }
 
 .taf-result-card:hover {
@@ -351,12 +351,12 @@
 }
 
 .taf-debug-info {
-    background: #000 !important;
+    background: #080a0b !important;
     border: 1px solid #333 !important;
-    border-radius: 8px;
-    padding: 20px;
-    margin-top: 20px;
-    font-size: 14px;
+    border-radius: 8px !important;
+    padding: 20px !important;
+    margin-top: 20px !important;
+    font-size: 14px !important;
     color: #fff !important;
 }
 
