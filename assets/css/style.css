@@ -5,23 +5,28 @@
 }
 
 .taf-filter-form {
-    background: #fff;
+    background: #000;
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     margin-bottom: 30px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: flex-end;
 }
 
 .taf-select-group {
-    margin-bottom: 15px;
-    position: relative;
+    flex: 1;
+    min-width: 200px;
+    margin: 0;
 }
 
 .taf-select-group label {
     display: block;
     margin-bottom: 5px;
     font-weight: 600;
-    color: #333;
+    color: #fff;
 }
 
 .taf-select {
@@ -32,13 +37,13 @@
     font-size: 14px;
     font-weight: 400;
     line-height: 1.5;
-    color: #333;
-    background-color: #fff;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%23333' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    color: #fff;
+    background-color: #333;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 4px center;
     background-size: 24px;
-    border: 1px solid #ddd;
+    border: 1px solid #444;
     border-radius: 4px;
     -webkit-appearance: none;
     -moz-appearance: none;
@@ -48,41 +53,42 @@
 }
 
 .taf-select:focus {
-    border-color: #007cba;
+    border-color: #00FF00;
     outline: 0;
-    box-shadow: 0 0 0 2px rgba(0, 124, 186, 0.25);
+    box-shadow: 0 0 0 2px rgba(0, 255, 0, 0.25);
 }
 
 .taf-select:disabled {
-    background-color: #e9ecef;
-    opacity: 1;
+    background-color: #222;
+    opacity: 0.7;
     cursor: not-allowed;
 }
 
 .taf-select option {
     padding: 8px;
     font-size: 14px;
-    color: #333;
+    color: #fff;
+    background-color: #333;
 }
 
 .taf-select option:first-child {
-    color: #666;
+    color: #aaa;
 }
 
 .taf-button {
     display: block;
-    width: 100%;
+    min-width: 150px;
     padding: 12px 20px;
     font-size: 14px;
     font-weight: 600;
     line-height: 1.5;
-    color: #fff;
+    color: #000;
     background-color: #00FF00;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.15s ease-in-out;
-    margin-top: 15px;
+    margin: 0;
 }
 
 .taf-button:hover:not(:disabled) {
@@ -95,14 +101,16 @@
 }
 
 .taf-button:disabled {
-    background-color: #ccc;
+    background-color: #333;
+    color: #666;
     cursor: not-allowed;
     opacity: 0.8;
 }
 
 .taf-button-secondary {
-    background-color: #666;
-    margin-top: 10px;
+    background-color: #444;
+    color: #fff;
+    margin-left: 10px;
 }
 
 .taf-button-secondary:hover:not(:disabled) {
@@ -138,11 +146,12 @@
 }
 
 .taf-result-card {
-    background: #fff;
+    background: #000;
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     transition: transform 0.3s ease;
+    border: 1px solid #333;
 }
 
 .taf-result-card:hover {
@@ -158,8 +167,9 @@
 
 .taf-product-image {
     position: relative;
-    padding-top: 75%; /* 4:3 arány */
+    padding-top: 75%;
     overflow: hidden;
+    background: #111;
 }
 
 .taf-product-image img {
@@ -178,7 +188,7 @@
 
 .taf-result-card h3 {
     margin: 15px;
-    color: #333;
+    color: #fff;
     font-size: 16px;
     font-weight: 600;
     text-align: center;
@@ -187,10 +197,11 @@
 .taf-product-price {
     text-align: center;
     margin: 10px 15px;
+    color: #fff;
 }
 
 .taf-sale-price {
-    color: #e41e31;
+    color: #00FF00;
     font-weight: 600;
     font-size: 18px;
     margin-right: 8px;
@@ -198,23 +209,23 @@
 
 .taf-regular-price {
     text-decoration: line-through;
-    color: #999;
+    color: #666;
     font-size: 14px;
 }
 
 .taf-price {
-    color: #333;
+    color: #fff;
     font-weight: 600;
     font-size: 18px;
 }
 
 .taf-specs {
-    background: #f9f9f9;
+    background: #111;
     padding: 15px;
     margin-top: 10px;
-    border-top: 1px solid #eee;
+    border-top: 1px solid #333;
     font-size: 14px;
-    color: #666;
+    color: #aaa;
 }
 
 .taf-specs span {
@@ -288,18 +299,33 @@
         padding: 10px;
     }
     
-    .taf-results {
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    .taf-filter-form {
+        flex-direction: column;
         gap: 15px;
     }
     
+    .taf-select-group {
+        width: 100%;
+        margin-bottom: 15px;
+    }
+    
     .taf-select {
-        font-size: 16px; /* Jobb mobilos használhatóság */
+        font-size: 16px;
         height: 44px;
     }
     
-    .taf-product-grid {
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    .taf-button {
+        width: 100%;
+        margin: 0;
+    }
+    
+    .taf-button-secondary {
+        margin: 10px 0 0 0;
+    }
+    
+    .taf-results {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 15px;
     }
     
     .taf-result-card h3 {
@@ -324,19 +350,32 @@
 }
 
 .taf-debug-info {
-    background: #f8f9fa;
-    border: 1px solid #dee2e6;
+    background: #000 !important;
+    border: 1px solid #333 !important;
     border-radius: 8px;
     padding: 20px;
     margin-top: 20px;
     font-size: 14px;
+    color: #fff !important;
 }
 
 .taf-debug-info h4 {
-    color: #333;
+    color: #fff !important;
     margin: 0 0 15px 0;
     font-size: 16px;
     font-weight: 600;
+}
+
+.taf-debug-info p {
+    color: #fff !important;
+    background: #111 !important;
+    padding: 10px;
+    border-radius: 4px;
+    margin: 5px 0;
+}
+
+.taf-debug-info strong {
+    color: #00FF00 !important;
 }
 
 .taf-debug-section {
